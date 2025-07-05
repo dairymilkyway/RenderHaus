@@ -5,6 +5,8 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
+import Unauthorized from './components/Unauthorized';
 import './App.css';
 
 function App() {
@@ -47,11 +49,12 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['user', 'admin']}>
                   <Dashboard />
                 </ProtectedRoute>
               }
             />
+            <Route path="/unauthorized" element={<Unauthorized />} />
           </Routes>
         </main>
       </div>
