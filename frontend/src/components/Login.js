@@ -1,0 +1,188 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import {
+  EnvelopeIcon,
+  LockClosedIcon,
+  ArrowRightIcon,
+} from '@heroicons/react/24/outline';
+import './css/Auth.css';
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
+};
+
+const Login = ({ onSwitchToRegister }) => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Save token and user data
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect based on role
+      if (data.user.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-content">
+        <motion.div 
+          className="auth-box"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.h2 
+            className="auth-title"
+            {...fadeInUp}
+          >
+            Welcome Back
+          </motion.h2>
+          <motion.p 
+            className="auth-subtitle"
+            {...fadeInUp}
+            transition={{ delay: 0.1 }}
+          >
+            Enter your details to access your account
+          </motion.p>
+
+          {error && (
+            <motion.div 
+              className="error-message"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {error}
+            </motion.div>
+          )}
+
+          <motion.form 
+            onSubmit={handleSubmit}
+            className="auth-form"
+            variants={{
+              animate: {
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+            initial="initial"
+            animate="animate"
+          >
+            <motion.div className="form-group" {...fadeInUp}>
+              <label htmlFor="email">
+                <EnvelopeIcon className="input-icon" />
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Email Address"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
+            </motion.div>
+
+            <motion.div className="form-group" {...fadeInUp}>
+              <label htmlFor="password">
+                <LockClosedIcon className="input-icon" />
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                disabled={loading}
+              />
+            </motion.div>
+
+            <motion.a 
+              href="#" 
+              className="forgot-password"
+              {...fadeInUp}
+            >
+              Forgot your password?
+            </motion.a>
+
+            <motion.button
+              type="submit"
+              className="auth-button"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              {...fadeInUp}
+              disabled={loading}
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
+              <ArrowRightIcon className="button-icon" />
+            </motion.button>
+          </motion.form>
+
+          <motion.p 
+            className="auth-switch"
+            {...fadeInUp}
+          >
+            Don't have an account?{" "}
+            <button 
+              className="switch-button"
+              onClick={onSwitchToRegister}
+              disabled={loading}
+            >
+              Sign Up
+            </button>
+          </motion.p>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default Login; 
