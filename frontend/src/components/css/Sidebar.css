@@ -6,6 +6,16 @@
   gap: 2rem;
   border-right: 1px solid #e2e8f0;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.dashboard-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .tool-section {

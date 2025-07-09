@@ -5,6 +5,7 @@
   height: 100vh;
   background-color: #f8fafc;
   position: relative;
+  overflow: hidden;
 }
 
 /* Main Content Area */
@@ -12,12 +13,14 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100vh;
 }
 
 .dashboard-topbar {
   padding: 1rem 2rem;
   background-color: #ffffff;
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .project-info {
@@ -63,8 +66,8 @@
 /* Design Canvas */
 .design-canvas {
   flex: 1;
-  padding: 2rem;
-  overflow: auto;
+  overflow: hidden;
+  position: relative;
 }
 
 .canvas-placeholder {
