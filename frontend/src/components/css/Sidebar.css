@@ -1,0 +1,59 @@
+.dashboard-sidebar {
+  background-color: #ffffff;
+  padding: 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.tool-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tool-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tool-button:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.tool-button.active {
+  background-color: #e0f2fe;
+  color: #0284c7;
+}
+
+.tool-button.ai-button {
+  color: #7c3aed;
+}
+
+.tool-button.ai-button:hover {
+  background-color: #f3e8ff;
+}
+
+.tool-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 4px;
+}
+
+.tool-button span {
+  font-size: 0.75rem;
+  font-weight: 500;
+} 

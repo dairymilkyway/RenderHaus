@@ -1,0 +1,26 @@
+.dashboard-sidebar.right {
+  width: 300px;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-left: 1px solid #e2e8f0;
+}
+
+.properties-panel {
+  margin-bottom: 2rem;
+}
+
+.properties-panel h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 1rem;
+}
+
+.property-placeholder {
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  color: #94a3b8;
+  text-align: center;
+  font-size: 0.875rem;
+} 

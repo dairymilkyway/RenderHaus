@@ -48,3 +48,4 @@
 {"level":"info","message":"MongoDB Connected","service":"renderhaus-backend","timestamp":"2025-07-10 01:03:47"}
 {"level":"info","message":"Server running in development mode on port 5000","service":"renderhaus-backend","timestamp":"2025-07-10 01:04:01"}
 {"level":"info","message":"MongoDB Connected","service":"renderhaus-backend","timestamp":"2025-07-10 01:04:02"}
+{"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-10 01:08:25"}

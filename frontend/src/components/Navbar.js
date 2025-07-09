@@ -9,7 +9,8 @@ import {
   ChartBarIcon,
   BuildingOfficeIcon,
   EnvelopeIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import './css/Navbar.css';
 
@@ -34,6 +35,29 @@ const Navbar = ({ user, onLogout }) => {
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
   };
+
+  // Get user initials for avatar
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      const dropdown = document.querySelector('.user-dropdown');
+      if (dropdown && !dropdown.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <nav className="nav">
@@ -83,22 +107,37 @@ const Navbar = ({ user, onLogout }) => {
                   onClick={toggleDropdown}
                 >
                   <div className="user-info-compact">
-                    <UserCircleIcon className="nav-icon" />
-                    <span className="nav-user-role">{user.role}</span>
-                    <ChevronDownIcon className="nav-icon-small" />
+                    <div className="user-avatar">
+                      {getInitials(user.name)}
+                    </div>
+                    <div className="user-info-text">
+                      <span className="nav-user-name">{user.name.split(' ')[0]}</span>
+                      <span className="nav-user-role">{user.role}</span>
+                    </div>
+                    <ChevronDownIcon className="nav-icon-small" style={{
+                      transform: showDropdown ? 'rotate(180deg)' : 'rotate(0)',
+                      transition: 'transform 0.2s ease'
+                    }} />
                   </div>
                 </button>
                 {showDropdown && (
                   <div className="dropdown-menu">
                     <div className="dropdown-header">
+                      <div className="user-avatar">
+                        {getInitials(user.name)}
+                      </div>
                       <span className="dropdown-user-name">{user.name}</span>
                       <span className="dropdown-user-email">{user.email}</span>
                     </div>
-                    <div className="dropdown-divider" />
                     <NavLink to="/profile" className="dropdown-item">
                       <UserCircleIcon className="nav-icon" />
-                      Profile
+                      Profile Settings
                     </NavLink>
+                    <NavLink to="/settings" className="dropdown-item">
+                      <Cog6ToothIcon className="nav-icon" />
+                      Account Settings
+                    </NavLink>
+                    <div className="dropdown-divider" />
                     <button 
                       className="dropdown-item text-red" 
                       onClick={() => {
@@ -107,7 +146,7 @@ const Navbar = ({ user, onLogout }) => {
                       }}
                     >
                       <ArrowRightOnRectangleIcon className="nav-icon" />
-                      Logout
+                      Sign Out
                     </button>
                   </div>
                 )}

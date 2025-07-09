@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Squares2X2Icon,
-  CubeIcon,
-  SwatchIcon,
-  CameraIcon,
-  SparklesIcon,
-  LightBulbIcon,
-  FolderIcon,
   DocumentDuplicateIcon,
-  AcademicCapIcon,
   ArrowPathIcon,
-  CloudArrowUpIcon,
-  ShareIcon,
-  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
+import Sidebar from './Sidebar';
+import Properties from './Properties';
+import Canvas from './Canvas';
 import './css/Dashboard.css';
 
 const Dashboard = () => {
@@ -23,6 +15,7 @@ const Dashboard = () => {
   const [showTutorial, setShowTutorial] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -59,55 +52,18 @@ const Dashboard = () => {
     fetchUserProfile();
   }, [navigate]);
 
+  const handleSectionChange = (section) => {
+    setActiveSection(section === activeSection ? null : section);
+  };
+
   if (loading) {
     return <div className="dashboard-loading">Loading...</div>;
   }
 
   return (
     <div className="dashboard-container">
-      {/* Left Sidebar - Main Tools */}
-      <div className="dashboard-sidebar">
-        <div className="tool-section">
-          <button className="tool-button active">
-            <Squares2X2Icon className="tool-icon" />
-            <span>Templates</span>
-          </button>
-          <button className="tool-button">
-            <CubeIcon className="tool-icon" />
-            <span>Components</span>
-          </button>
-          <button className="tool-button">
-            <SwatchIcon className="tool-icon" />
-            <span>Materials</span>
-          </button>
-          <button className="tool-button">
-            <CameraIcon className="tool-icon" />
-            <span>View</span>
-          </button>
-        </div>
-
-        <div className="tool-section">
-          <button className="tool-button ai-button">
-            <SparklesIcon className="tool-icon" />
-            <span>AI Suggest</span>
-          </button>
-          <button className="tool-button ai-button">
-            <LightBulbIcon className="tool-icon" />
-            <span>AI Explain</span>
-          </button>
-        </div>
-
-        <div className="tool-section">
-          <button className="tool-button">
-            <CloudArrowUpIcon className="tool-icon" />
-            <span>Save</span>
-          </button>
-          <button className="tool-button">
-            <ShareIcon className="tool-icon" />
-            <span>Export</span>
-          </button>
-        </div>
-      </div>
+      {/* Left Sidebar */}
+      <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
 
       {/* Main Content Area */}
       <div className="dashboard-main">
@@ -131,12 +87,7 @@ const Dashboard = () => {
         </div>
 
         {/* Design Canvas Area */}
-        <div className="design-canvas">
-          <div className="canvas-placeholder">
-            <CubeIcon className="placeholder-icon" />
-            <p>Select a template or start with a blank canvas</p>
-          </div>
-        </div>
+        <Canvas />
 
         {/* Tutorial Overlay (if shown) */}
         {showTutorial && (
@@ -151,14 +102,7 @@ const Dashboard = () => {
       </div>
 
       {/* Right Sidebar - Properties */}
-      <div className="dashboard-sidebar right">
-        <div className="properties-panel">
-          <h3>Properties</h3>
-          <div className="property-placeholder">
-            Select an element to view its properties
-          </div>
-        </div>
-      </div>
+      <Properties activeSection={activeSection} />
     </div>
   );
 };
