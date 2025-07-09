@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   EnvelopeIcon,
   LockClosedIcon,
@@ -43,18 +44,26 @@ const Login = ({ onSwitchToRegister }) => {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Save token and user data
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Save tokens and user data
+      localStorage.setItem('accessToken', data.data.tokens.accessToken);
+      localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
 
-      // Redirect based on role
-      if (data.user.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      // Show success notification
+      toast.success('Login successful! Welcome back!', {
+        onClose: () => {
+          // Redirect based on role and reload page after notification
+          if (data.data.user.role === 'admin') {
+            window.location.href = '/admin-dashboard';
+          } else {
+            window.location.href = '/dashboard';
+          }
+        }
+      });
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to login. Please try again.');
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }

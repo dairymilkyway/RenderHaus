@@ -22,7 +22,7 @@ import './css/Dashboard.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [activeProject, setActiveProject] = useState('Living Room Design');
+  const [activeProject] = useState('Living Room Design');
   const [showTutorial, setShowTutorial] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [user, setUser] = useState(null);
@@ -31,15 +31,16 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
+        // Update token access to use accessToken instead of token
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
           navigate('/login');
           return;
         }
 
         const response = await fetch('http://localhost:5000/api/auth/profile', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${accessToken}`
           }
         });
 
@@ -48,10 +49,12 @@ const Dashboard = () => {
         }
 
         const data = await response.json();
-        setUser(data);
+        setUser(data.data.user); // Update to match new response format
       } catch (err) {
         console.error('Error fetching profile:', err);
-        localStorage.removeItem('token');
+        // Clear all auth data
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         navigate('/login');
       } finally {
@@ -63,7 +66,9 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    // Clear all auth data
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     navigate('/login');
   };
@@ -186,7 +191,7 @@ const Dashboard = () => {
         {showTutorial && (
           <div className="tutorial-overlay">
             <div className="tutorial-content">
-              <h2>Welcome to NaviBuild!</h2>
+              <h2>Welcome to RenderHaus!</h2>
               <p>Let's get you started with the basics...</p>
               {/* Tutorial steps would go here */}
             </div>
@@ -198,56 +203,9 @@ const Dashboard = () => {
       <div className="dashboard-sidebar right">
         <div className="properties-panel">
           <h3>Properties</h3>
-          <div className="property-placeholder">
-            Select an element to edit its properties
-          </div>
-        </div>
-
-        <div className="ai-suggestions-panel">
-          <h3>AI Suggestions</h3>
-          <div className="suggestion-card">
-            <SparklesIcon className="suggestion-icon" />
-            <div className="suggestion-content">
-              <h4>Layout Balance</h4>
-              <p>Consider adding a decorative element to the right corner for better visual balance.</p>
-            </div>
-          </div>
+          {/* Properties content would go here */}
         </div>
       </div>
-
-      {/* Project Management Panel */}
-      <div className="projects-panel">
-        <div className="panel-header">
-          <h3>My Projects</h3>
-          <button className="new-project-button">
-            <FolderIcon className="button-icon" />
-            New Project
-          </button>
-        </div>
-        <div className="project-list">
-          <div className="project-card active">
-            <h4>Living Room Design</h4>
-            <span className="project-date">Last edited: 2 hours ago</span>
-          </div>
-          <div className="project-card">
-            <h4>Kitchen Renovation</h4>
-            <span className="project-date">Last edited: Yesterday</span>
-          </div>
-          <div className="project-card">
-            <h4>Master Bedroom</h4>
-            <span className="project-date">Last edited: 3 days ago</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Help Button */}
-      <button 
-        className="help-button"
-        onClick={() => setShowTutorial(true)}
-      >
-        <AcademicCapIcon className="help-icon" />
-        Show Tutorial
-      </button>
     </div>
   );
 };

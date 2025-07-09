@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Link } from 'react-scroll';
+import { Link as ScrollLink } from 'react-scroll';
 import { motion } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import {
@@ -98,7 +98,7 @@ const LandingPage = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          Why Choose NaviBuild
+          Why Choose RenderHaus
         </motion.h2>
         <motion.p 
           className="section-subtitle"

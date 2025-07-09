@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   EnvelopeIcon,
   LockClosedIcon,
@@ -45,14 +46,22 @@ const Register = ({ onSwitchToLogin }) => {
         throw new Error(data.message || 'Registration failed');
       }
 
-      // Save token and user data
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Save tokens and user data
+      localStorage.setItem('accessToken', data.data.tokens.accessToken);
+      localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
 
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // Show success notification
+      toast.success('Registration successful! Welcome to RenderHaus!', {
+        onClose: () => {
+          // Redirect to dashboard and reload page after notification
+          window.location.href = '/dashboard';
+        }
+      });
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to register. Please try again.');
+      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
@@ -156,6 +165,9 @@ const Register = ({ onSwitchToLogin }) => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                minLength="6"
+                pattern="(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}"
+                title="Password must be at least 6 characters long and contain at least one letter and one number"
               />
             </motion.div>
 

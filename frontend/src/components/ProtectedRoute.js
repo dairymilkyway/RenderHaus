@@ -2,11 +2,24 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const accessToken = localStorage.getItem('accessToken');
+  let user = null;
 
-  if (!token) {
-    // Not logged in, redirect to login page
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      user = JSON.parse(userStr);
+    }
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    localStorage.removeItem('user'); // Clear invalid data
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!accessToken || !user) {
+    // Not logged in or no user data, redirect to login page
     return <Navigate to="/auth" replace />;
   }
 
