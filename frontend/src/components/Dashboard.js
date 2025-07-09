@@ -13,9 +13,6 @@ import {
   ArrowPathIcon,
   CloudArrowUpIcon,
   ShareIcon,
-  UserCircleIcon,
-  ChevronDownIcon,
-  ArrowRightOnRectangleIcon,
   Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import './css/Dashboard.css';
@@ -24,14 +21,12 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [activeProject] = useState('Living Room Design');
   const [showTutorial, setShowTutorial] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // Update token access to use accessToken instead of token
         const accessToken = localStorage.getItem('accessToken');
         if (!accessToken) {
           navigate('/login');
@@ -49,10 +44,9 @@ const Dashboard = () => {
         }
 
         const data = await response.json();
-        setUser(data.data.user); // Update to match new response format
+        setUser(data.data.user);
       } catch (err) {
         console.error('Error fetching profile:', err);
-        // Clear all auth data
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
@@ -64,14 +58,6 @@ const Dashboard = () => {
 
     fetchUserProfile();
   }, [navigate]);
-
-  const handleLogout = () => {
-    // Clear all auth data
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
 
   if (loading) {
     return <div className="dashboard-loading">Loading...</div>;
@@ -140,41 +126,6 @@ const Dashboard = () => {
                   Duplicate
                 </button>
               </div>
-
-              {/* User Profile Section */}
-              <div className="user-profile">
-                <div 
-                  className="profile-trigger"
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                >
-                  <span className="welcome-text">Welcome, {user?.name}</span>
-                  <UserCircleIcon className="profile-icon" />
-                  <ChevronDownIcon className="dropdown-icon" />
-                </div>
-
-                {showProfileMenu && (
-                  <div className="profile-dropdown">
-                    <div className="profile-header">
-                      <UserCircleIcon className="dropdown-profile-icon" />
-                      <div className="profile-info">
-                        <span className="profile-name">{user?.name}</span>
-                        <span className="profile-email">{user?.email}</span>
-                        <span className="profile-role">{user?.role}</span>
-                      </div>
-                    </div>
-                    <div className="profile-menu">
-                      <button className="menu-item">
-                        <Cog6ToothIcon className="menu-icon" />
-                        Settings
-                      </button>
-                      <button className="menu-item" onClick={handleLogout}>
-                        <ArrowRightOnRectangleIcon className="menu-icon" />
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -199,11 +150,13 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Right Sidebar - Properties & AI Suggestions */}
+      {/* Right Sidebar - Properties */}
       <div className="dashboard-sidebar right">
         <div className="properties-panel">
           <h3>Properties</h3>
-          {/* Properties content would go here */}
+          <div className="property-placeholder">
+            Select an element to view its properties
+          </div>
         </div>
       </div>
     </div>

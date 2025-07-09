@@ -133,23 +133,18 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(241, 245, 249, 0.8);
-  border-radius: 0.75rem;
-  border: 1px solid rgba(226, 232, 240, 0.5);
+  padding: 0.5rem;
   transition: all 0.2s ease;
 }
 
 .user-info-compact:hover {
-  background: rgba(241, 245, 249, 0.95);
+  opacity: 0.8;
 }
 
 .nav-user-role {
   font-size: 0.8rem;
   color: #3b82f6;
-  background: rgba(59, 130, 246, 0.1);
   padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
   font-weight: 500;
 }
 
