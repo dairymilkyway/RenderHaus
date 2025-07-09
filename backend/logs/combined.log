@@ -39,3 +39,12 @@
 {"level":"info","message":"::ffff:127.0.0.1 - - [09/Jul/2025:17:00:19 +0000] \"GET /api/auth/profile HTTP/1.1\" 304 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 OPR/119.0.0.0\"","service":"renderhaus-backend","timestamp":"2025-07-10 01:00:19"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [09/Jul/2025:17:00:23 +0000] \"GET /api/auth/profile HTTP/1.1\" 304 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 OPR/119.0.0.0\"","service":"renderhaus-backend","timestamp":"2025-07-10 01:00:23"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [09/Jul/2025:17:00:23 +0000] \"GET /api/auth/profile HTTP/1.1\" 304 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 OPR/119.0.0.0\"","service":"renderhaus-backend","timestamp":"2025-07-10 01:00:23"}
+{"level":"info","message":"Server running in development mode on port 5000","service":"renderhaus-backend","timestamp":"2025-07-10 01:03:13"}
+{"level":"info","message":"MongoDB Connected","service":"renderhaus-backend","timestamp":"2025-07-10 01:03:14"}
+{"level":"info","message":"Server running in development mode on port 5000","service":"renderhaus-backend","timestamp":"2025-07-10 01:03:17"}
+{"level":"info","message":"MongoDB Connected","service":"renderhaus-backend","timestamp":"2025-07-10 01:03:18"}
+{"level":"info","message":"Server running in development mode on port 5000","service":"renderhaus-backend","timestamp":"2025-07-10 01:03:45"}
+{"level":"info","message":"Server running in development mode on port 5000","service":"renderhaus-backend","timestamp":"2025-07-10 01:03:46"}
+{"level":"info","message":"MongoDB Connected","service":"renderhaus-backend","timestamp":"2025-07-10 01:03:47"}
+{"level":"info","message":"Server running in development mode on port 5000","service":"renderhaus-backend","timestamp":"2025-07-10 01:04:01"}
+{"level":"info","message":"MongoDB Connected","service":"renderhaus-backend","timestamp":"2025-07-10 01:04:02"}

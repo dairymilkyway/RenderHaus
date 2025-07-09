@@ -1,80 +1,64 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
-const hpp = require('hpp');
-
-const config = require('./config/config');
-const logger = require('./utils/logger');
-const { AppError } = require('./utils/errors');
+const axios = require('axios');
+const path = require('path');
 
 const app = express();
 
-// Security middleware
-app.use(helmet()); // Set security HTTP headers
-app.use(cors(config.cors));
-app.use(rateLimit(config.rateLimit));
-app.use(mongoSanitize()); // Data sanitization against NoSQL query injection
-app.use(xss()); // Data sanitization against XSS
-app.use(hpp()); // Prevent parameter pollution
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-// Body parsing middleware
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/renderhaus')
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-// Logging middleware
-app.use(morgan('combined', { stream: logger.stream }));
-
-// Connect to MongoDB
-mongoose.connect(config.mongoUri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => logger.info('MongoDB Connected'))
-.catch(err => logger.error('MongoDB connection error:', err));
+// Python backend health check
+const checkPythonBackend = async () => {
+  try {
+    const response = await axios.get(`http://localhost:${process.env.PYTHON_PORT || 5001}/api/python/health`);
+    console.log('Python backend status:', response.data);
+    return true;
+  } catch (error) {
+    console.error('Python backend error:', error.message);
+    return false;
+  }
+};
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 
-// 404 handler
-app.use((req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
-
-  if (config.nodeEnv === 'development') {
-    logger.error('Error 💥:', {
-      status: err.status,
-      error: err,
-      message: err.message,
-      stack: err.stack
+// Python backend proxy route
+app.use('/api/python', async (req, res, next) => {
+  try {
+    const pythonUrl = `http://localhost:${process.env.PYTHON_PORT || 5001}${req.url}`;
+    const response = await axios({
+      method: req.method,
+      url: pythonUrl,
+      data: req.body,
+      headers: req.headers
     });
-
-    res.status(err.statusCode).json({
-      status: err.status,
-      error: err,
-      message: err.message,
-      stack: err.stack
-    });
-  } else {
-    // Log error
-    logger.error('Error 💥:', err);
-
-    // Send generic message
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.isOperational ? err.message : 'Something went wrong!'
-    });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    next(error);
   }
 });
 
-const PORT = config.port;
-app.listen(PORT, () => logger.info(`Server running in ${config.nodeEnv} mode on port ${PORT}`)); 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    status: 'error',
+    message: err.message || 'Internal server error'
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, async () => {
+  console.log(`Node.js server running on port ${PORT}`);
+  await checkPythonBackend();
+}); 
