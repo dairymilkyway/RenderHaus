@@ -17,39 +17,93 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(null);
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const accessToken = localStorage.getItem('accessToken');
-        if (!accessToken) {
-          navigate('/login');
-          return;
+  const refreshToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await fetch('http://localhost:5000/api/auth/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('accessToken', data.data.tokens.accessToken);
+      localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
+      return data.data.tokens.accessToken;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      navigate('/login');
+      throw error;
+    }
+  };
+
+  const fetchUserProfile = async (token) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      });
 
-        const response = await fetch('http://localhost:5000/api/auth/profile', {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`
-          }
-        });
+      if (response.status === 401) {
+        // Token expired, try to refresh
+        const newToken = await refreshToken();
+        return fetchUserProfile(newToken);
+      }
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile');
-        }
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
 
-        const data = await response.json();
-        setUser(data.data.user);
-      } catch (err) {
-        console.error('Error fetching profile:', err);
+      const data = await response.json();
+      setUser(data.data.user);
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      if (err.message !== 'Token refresh failed') {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         navigate('/login');
-      } finally {
-        setLoading(false);
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initializeProfile = async () => {
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) {
+        navigate('/login');
+        return;
+      }
+      await fetchUserProfile(accessToken);
     };
 
-    fetchUserProfile();
+    initializeProfile();
+
+    // Set up periodic token refresh (every 45 minutes)
+    const refreshInterval = setInterval(() => {
+      const accessToken = localStorage.getItem('accessToken');
+      if (accessToken) {
+        refreshToken().catch(console.error);
+      }
+    }, 45 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
   }, [navigate]);
 
   const handleSectionChange = (section) => {
