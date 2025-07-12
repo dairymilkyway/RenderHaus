@@ -8,11 +8,11 @@ import AIExplainSection from './Functions/AIExplainSection';
 import SaveExportSection from './Functions/SaveExportSection';
 import './css/Properties.css';
 
-const Properties = ({ activeSection }) => {
+const Properties = ({ activeSection, onTemplateSelect }) => {
   const renderSection = () => {
     switch (activeSection) {
       case 'templates':
-        return <TemplatesSection />;
+        return <TemplatesSection onTemplateSelect={onTemplateSelect} />;
       case 'components':
         return <ComponentsSection />;
       case 'materials':

@@ -50,3 +50,6 @@
 {"level":"info","message":"MongoDB Connected","service":"renderhaus-backend","timestamp":"2025-07-10 01:04:02"}
 {"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-10 01:08:25"}
 {"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-10 01:35:55"}
+{"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-10 12:43:06"}
+{"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-11 07:43:08"}
+{"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-12 09:48:34"}

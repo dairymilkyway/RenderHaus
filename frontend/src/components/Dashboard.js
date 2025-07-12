@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const refreshToken = async () => {
     try {
@@ -107,7 +108,11 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleSectionChange = (section) => {
-    setActiveSection(section === activeSection ? null : section);
+    setActiveSection(section);
+  };
+
+  const handleTemplateSelect = (template) => {
+    setSelectedTemplate(template);
   };
 
   if (loading) {
@@ -141,7 +146,7 @@ const Dashboard = () => {
         </div>
 
         {/* Design Canvas Area */}
-        <Canvas />
+        <Canvas selectedTemplate={selectedTemplate} />
 
         {/* Tutorial Overlay (if shown) */}
         {showTutorial && (
@@ -156,7 +161,10 @@ const Dashboard = () => {
       </div>
 
       {/* Right Sidebar - Properties */}
-      <Properties activeSection={activeSection} />
+      <Properties 
+        activeSection={activeSection} 
+        onTemplateSelect={handleTemplateSelect}
+      />
     </div>
   );
 };

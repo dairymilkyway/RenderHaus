@@ -90,6 +90,222 @@ const createStableTexture = (type) => {
 const grassTexture = createStableTexture('grass');
 const dirtTexture = createStableTexture('dirt');
 
+const Room = ({ model }) => {
+  const { width, length, height, walls = [], furniture = [], floor = {} } = model;
+
+  // Floor material based on type
+  const getFloorMaterial = () => {
+    const baseColor = floor.color || '#f0f0f0';
+    
+    switch (floor.material) {
+      case 'hardwood':
+        return (
+          <meshStandardMaterial
+            color={baseColor}
+            roughness={0.7}
+            metalness={0.1}
+            bumpScale={0.1}
+          />
+        );
+      case 'tile':
+        return (
+          <meshStandardMaterial
+            color={baseColor}
+            roughness={0.3}
+            metalness={0.2}
+            bumpScale={0.05}
+          />
+        );
+      case 'carpet':
+        return (
+          <meshStandardMaterial
+            color={baseColor}
+            roughness={0.9}
+            metalness={0}
+            bumpScale={0.2}
+          />
+        );
+      case 'concrete':
+        return (
+          <meshStandardMaterial
+            color={baseColor}
+            roughness={0.8}
+            metalness={0.1}
+            bumpScale={0.05}
+          />
+        );
+      default:
+        return <meshStandardMaterial color={baseColor} />;
+    }
+  };
+
+  // Calculate wall thickness offset
+  const wallThickness = 0.2;
+  const innerWidth = width - wallThickness;
+  const innerLength = length - wallThickness;
+
+  return (
+    <group position={[0, 0, 0]}>
+      {/* Base platform (bottom layer) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]}>
+        <planeGeometry args={[width + 1, length + 1]} />
+        <meshStandardMaterial color="#2c2c2c" roughness={0.8} />
+      </mesh>
+
+      {/* Template-specific floor (middle layer) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
+        <planeGeometry args={[innerWidth, innerLength]} />
+        {getFloorMaterial()}
+      </mesh>
+
+      {/* Floor edges */}
+      <group position={[0, -0.1, 0]}>
+        {/* Front edge */}
+        <mesh position={[0, 0, length/2 - wallThickness/2]}>
+          <boxGeometry args={[width - wallThickness, 0.02, wallThickness/2]} />
+          <meshStandardMaterial color={floor.color} />
+        </mesh>
+        {/* Back edge */}
+        <mesh position={[0, 0, -length/2 + wallThickness/2]}>
+          <boxGeometry args={[width - wallThickness, 0.02, wallThickness/2]} />
+          <meshStandardMaterial color={floor.color} />
+        </mesh>
+        {/* Left edge */}
+        <mesh position={[-width/2 + wallThickness/2, 0, 0]}>
+          <boxGeometry args={[wallThickness/2, 0.02, length - wallThickness]} />
+          <meshStandardMaterial color={floor.color} />
+        </mesh>
+        {/* Right edge */}
+        <mesh position={[width/2 - wallThickness/2, 0, 0]}>
+          <boxGeometry args={[wallThickness/2, 0.02, length - wallThickness]} />
+          <meshStandardMaterial color={floor.color} />
+        </mesh>
+      </group>
+
+      {/* Room structure (top layer) */}
+      <group position={[0, 0, 0]}>
+        {/* Walls */}
+        {walls.map((wall, index) => {
+          const isHorizontal = wall.position === 'front' || wall.position === 'back';
+          const wallWidth = isHorizontal ? width : length;
+          const wallHeight = wall.height || height;
+          const wallPosition = {
+            front: [0, wallHeight / 2, length / 2],
+            back: [0, wallHeight / 2, -length / 2],
+            left: [-width / 2, wallHeight / 2, 0],
+            right: [width / 2, wallHeight / 2, 0]
+          }[wall.position];
+          const wallRotation = isHorizontal ? [0, 0, 0] : [0, Math.PI / 2, 0];
+
+          return (
+            <mesh
+              key={index}
+              position={wallPosition}
+              rotation={wallRotation}
+            >
+              <boxGeometry args={[wallWidth, wallHeight, wallThickness]} />
+              <meshStandardMaterial 
+                color="#ffffff"
+                transparent={true}
+                opacity={0.85}
+              />
+            </mesh>
+          );
+        })}
+
+        {/* No ceiling for open space concept */}
+        {model.type !== 'house' && (
+          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, height, 0]}>
+            <planeGeometry args={[width, length]} />
+            <meshStandardMaterial color="#ffffff" />
+          </mesh>
+        )}
+
+        {/* Furniture */}
+        {furniture.map((item, index) => {
+          const scale = item.scale || [1, 1, 1];
+          const position = item.position || [0, 0, 0];
+          const adjustedPosition = [position[0], position[1] + scale[1] / 2, position[2]];
+          
+          let geometry;
+          let color;
+
+          switch (item.type) {
+            case 'sofa':
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#8B4513";
+              break;
+            case 'chair':
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#A0522D";
+              break;
+            case 'table':
+            case 'coffeeTable':
+            case 'outdoorTable':
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#DEB887";
+              break;
+            case 'bed':
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#F5DEB3";
+              break;
+            case 'desk':
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#D2691E";
+              break;
+            case 'bookshelf':
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#8B4513";
+              break;
+            case 'counter':
+            case 'sink':
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#B8860B";
+              break;
+            case 'stove':
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#696969";
+              break;
+            default:
+              geometry = <boxGeometry args={[1, 1, 1]} />;
+              color = "#808080";
+          }
+
+          return (
+            <mesh
+              key={index}
+              position={adjustedPosition}
+              scale={scale}
+            >
+              {geometry}
+              <meshStandardMaterial color={color} />
+            </mesh>
+          );
+        })}
+      </group>
+    </group>
+  );
+};
+
+const House = ({ model }) => {
+  const { width, length, height, walls = [], roof } = model;
+
+  return (
+    <group position={[0, height / 2, 0]}>
+      {/* Base structure similar to Room */}
+      <Room model={model} />
+
+      {/* Roof */}
+      {roof && (
+        <mesh position={[0, height / 2 + 0.1, 0]} receiveShadow castShadow>
+          <coneGeometry args={[Math.max(width, length) / 1.5, height / 2, 4]} />
+          <meshStandardMaterial color="#8b4513" />
+        </mesh>
+      )}
+    </group>
+  );
+};
+
 const Platform = () => {
   const platformSize = 15;
   const platformHeight = 0.5;
@@ -116,7 +332,7 @@ const Platform = () => {
             roughness={0.9}
             metalness={0}
             transparent={true}
-            opacity={0.99} // Helps blend the texture
+            opacity={0.99}
           />
         </mesh>
         {/* Back */}
@@ -172,7 +388,7 @@ const Platform = () => {
   );
 };
 
-const Scene = () => {
+const Scene = ({ selectedTemplate }) => {
   const { camera } = useThree();
 
   useEffect(() => {
@@ -201,6 +417,13 @@ const Scene = () => {
         intensity={0.5}
       />
       <Platform />
+      {selectedTemplate && selectedTemplate.model && (
+        selectedTemplate.model.type === 'house' ? (
+          <House model={selectedTemplate.model} />
+        ) : (
+          <Room model={selectedTemplate.model} />
+        )
+      )}
       <OrbitControls 
         maxPolarAngle={Math.PI / 2.1}
         minDistance={5}
@@ -210,7 +433,7 @@ const Scene = () => {
   );
 };
 
-const Canvas = () => {
+const Canvas = ({ selectedTemplate }) => {
   return (
     <div className="design-canvas">
       <ThreeCanvas
@@ -218,7 +441,7 @@ const Canvas = () => {
         camera={{ position: [8, 8, 8], fov: 50 }}
         gl={{ antialias: true }}
       >
-        <Scene />
+        <Scene selectedTemplate={selectedTemplate} />
       </ThreeCanvas>
     </div>
   );
