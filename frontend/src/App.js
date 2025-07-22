@@ -9,6 +9,7 @@ import LandingPage from './components/LandingPage';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Unauthorized from './components/Unauthorized';
+import AdminDashboard from './components/Admins/AdminDashboard';
 import './App.css';
 
 function App() {
@@ -31,7 +32,12 @@ function App() {
 
   const AuthComponent = () => {
     if (user) {
-      return <Navigate to="/dashboard" replace />;
+      // Redirect based on user role
+      if (user.role === 'admin') {
+        return <Navigate to="/admin/dashboard" replace />;
+      } else {
+        return <Navigate to="/dashboard" replace />;
+      }
     }
     return isLoginView ? (
       <Login onSwitchToRegister={() => setIsLoginView(false)} />
@@ -55,22 +61,61 @@ function App() {
           pauseOnHover
           theme="light"
         />
-        <Navbar user={user} onLogout={handleLogout} />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthComponent />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['user', 'admin']}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/unauthorized" element={<Unauthorized />} />
-          </Routes>
-        </main>
+        <Routes>
+          {/* Admin Routes - without regular navbar */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          {/* Regular Routes - with navbar */}
+          <Route path="/admin/*" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          {/* Public and User Routes */}
+          <Route path="/" element={
+            <>
+              <Navbar user={user} onLogout={handleLogout} />
+              <main className="main-content">
+                <LandingPage />
+              </main>
+            </>
+          } />
+          <Route path="/auth" element={
+            <>
+              <Navbar user={user} onLogout={handleLogout} />
+              <main className="main-content">
+                <AuthComponent />
+              </main>
+            </>
+          } />
+          <Route
+            path="/dashboard"
+            element={
+              <>
+                <Navbar user={user} onLogout={handleLogout} />
+                <main className="main-content">
+                  <ProtectedRoute allowedRoles={['user', 'admin']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                </main>
+              </>
+            }
+          />
+          <Route path="/unauthorized" element={
+            <>
+              <Navbar user={user} onLogout={handleLogout} />
+              <main className="main-content">
+                <Unauthorized />
+              </main>
+            </>
+          } />
+        </Routes>
       </div>
     </Router>
   );

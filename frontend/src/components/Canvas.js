@@ -288,7 +288,7 @@ const Room = ({ model }) => {
 };
 
 const House = ({ model }) => {
-  const { width, length, height, walls = [], roof } = model;
+  const { width, length, height, roof } = model;
 
   return (
     <group position={[0, height / 2, 0]}>

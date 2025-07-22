@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
   EnvelopeIcon,
@@ -17,7 +16,6 @@ const fadeInUp = {
 };
 
 const Register = ({ onSwitchToLogin }) => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',

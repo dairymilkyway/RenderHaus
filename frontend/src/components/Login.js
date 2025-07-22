@@ -52,11 +52,11 @@ const Login = ({ onSwitchToRegister }) => {
       // Show success notification
       toast.success('Login successful! Welcome back!', {
         onClose: () => {
-          // Redirect based on role and reload page after notification
+          // Redirect based on role after notification
           if (data.data.user.role === 'admin') {
-            window.location.href = '/admin-dashboard';
+            navigate('/admin/dashboard');
           } else {
-            window.location.href = '/dashboard';
+            navigate('/dashboard');
           }
         }
       });

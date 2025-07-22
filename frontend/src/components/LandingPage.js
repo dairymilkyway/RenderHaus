@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Link as ScrollLink } from 'react-scroll';
 import { motion } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import {

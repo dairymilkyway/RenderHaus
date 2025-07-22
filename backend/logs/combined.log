@@ -53,3 +53,5 @@
 {"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-10 12:43:06"}
 {"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-11 07:43:08"}
 {"level":"info","message":"User logged in: gwynbarte@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-12 09:48:34"}
+{"level":"info","message":"New user registered: cocomeme@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-22 09:51:58"}
+{"level":"info","message":"User logged in: cocomeme@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-22 10:39:19"}

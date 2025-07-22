@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   DocumentDuplicateIcon,
@@ -18,7 +18,7 @@ const Dashboard = () => {
   const [activeSection, setActiveSection] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) {
@@ -49,9 +49,9 @@ const Dashboard = () => {
       navigate('/login');
       throw error;
     }
-  };
+  }, [navigate]);
 
-  const fetchUserProfile = async (token) => {
+  const fetchUserProfile = useCallback(async (token) => {
     try {
       const response = await fetch('http://localhost:5000/api/auth/profile', {
         headers: {
@@ -82,7 +82,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, refreshToken, setUser, setLoading]);
 
   useEffect(() => {
     const initializeProfile = async () => {
@@ -105,7 +105,7 @@ const Dashboard = () => {
     }, 45 * 60 * 1000);
 
     return () => clearInterval(refreshInterval);
-  }, [navigate]);
+  }, [navigate, fetchUserProfile, refreshToken]);
 
   const handleSectionChange = (section) => {
     setActiveSection(section);

@@ -10,13 +10,13 @@
   width: 100%;
   top: 0;
   z-index: 1000;
-  padding: 1.25rem 0;
+  padding: .25rem 0;
   border-bottom: 1px solid rgba(226, 232, 240, 0.5);
 }
 
 .nav-content {
   max-width: 1400px;
-  margin: 0 auto;
+  margin: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;

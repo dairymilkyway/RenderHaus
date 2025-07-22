@@ -3,6 +3,7 @@ import { SparklesIcon } from '@heroicons/react/24/outline';
 import './css/Sections.css';
 
 const AISuggestSection = () => {
+  // eslint-disable-next-line no-unused-vars
   const [suggestions, setSuggestions] = useState([
     {
       id: 1,
