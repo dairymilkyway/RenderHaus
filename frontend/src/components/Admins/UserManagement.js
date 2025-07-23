@@ -1,0 +1,705 @@
+import React, { useState, useEffect } from 'react';
+import AdminNavbar from './AdminNavbar';
+import AdminSidebar from './Sidebar';
+import {
+  UserGroupIcon,
+  PencilIcon,
+  TrashIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  UserPlusIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
+import { toast } from 'react-toastify';
+import './css/UserManagement.css';
+
+const UserManagement = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Filters and search
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [usersPerPage] = useState(10);
+  
+  // Modals
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  
+  // Confirmation checkboxes
+  const [hasReadDeactivateNotice, setHasReadDeactivateNotice] = useState(false);
+  const [hasReadDeleteNotice, setHasReadDeleteNotice] = useState(false);
+  
+  // Edit form
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    role: 'user'
+  });
+
+  // Fetch users
+  const fetchUsers = async (page = 1) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('accessToken');
+      
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: usersPerPage.toString(),
+        search: searchTerm,
+        role: roleFilter,
+        status: statusFilter,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      });
+
+      const response = await fetch(`http://localhost:5000/api/users?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch users');
+      }
+
+      setUsers(data.data.users);
+      setCurrentPage(data.data.pagination.currentPage);
+      setTotalPages(data.data.pagination.totalPages);
+      setTotalUsers(data.data.pagination.totalUsers);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update user
+  const updateUser = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5000/api/users/${selectedUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editForm)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update user');
+      }
+
+      toast.success('User updated successfully!');
+      setShowEditModal(false);
+      fetchUsers(currentPage);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Toggle user status
+  const handleToggleUserStatus = (user) => {
+    // If deactivating, show confirmation modal
+    if (user.isActive !== false) {
+      setSelectedUser(user);
+      setShowDeactivateModal(true);
+      setHasReadDeactivateNotice(false);
+    } else {
+      // If activating, do it directly
+      toggleUserStatus(user);
+    }
+  };
+
+  const toggleUserStatus = async (user) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5000/api/users/${user._id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update user status');
+      }
+
+      const action = data.data.user.isActive ? 'activated' : 'deactivated';
+      toast.success(`User ${action} successfully!`);
+      fetchUsers(currentPage);
+      
+      // Close modal if open
+      setShowDeactivateModal(false);
+      setHasReadDeactivateNotice(false);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Delete user
+  const deleteUser = async () => {
+    if (!hasReadDeleteNotice) {
+      toast.error('Please read and acknowledge the notice before proceeding.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5000/api/users/${selectedUser._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete user');
+      }
+
+      toast.success('User deleted successfully!');
+      setShowDeleteModal(false);
+      setHasReadDeleteNotice(false);
+      fetchUsers(currentPage);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Handle search and filters
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchUsers(1);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setRoleFilter('');
+    setStatusFilter('');
+    setCurrentPage(1);
+    fetchUsers(1);
+  };
+
+  // Handle edit modal
+  const openEditModal = (user) => {
+    setSelectedUser(user);
+    setEditForm({
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+    setShowEditModal(true);
+  };
+
+  // Handle delete modal
+  const openDeleteModal = (user) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+    setHasReadDeleteNotice(false);
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Get status badge
+  const getStatusBadge = (isActive) => {
+    return isActive ? (
+      <span className="status-badge active">
+        <CheckCircleIcon className="status-icon" />
+        Active
+      </span>
+    ) : (
+      <span className="status-badge inactive">
+        <XCircleIcon className="status-icon" />
+        Inactive
+      </span>
+    );
+  };
+
+  // Get role badge
+  const getRoleBadge = (role) => {
+    return (
+      <span className={`role-badge ${role}`}>
+        {role === 'admin' ? 'Admin' : 'User'}
+      </span>
+    );
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="admin-layout">
+      <AdminSidebar />
+      
+      <div className="admin-content">
+        <AdminNavbar />
+        
+        <div className="admin-main">
+          <div className="user-management">
+            {/* Header */}
+            <div className="page-header">
+              <div className="header-content">
+                <div className="header-text">
+                  <h1 className="page-title">
+                    <UserGroupIcon className="page-icon" />
+                    User Management
+                  </h1>
+                  <p className="page-subtitle">
+                    Manage and monitor all users in your system
+                  </p>
+                </div>
+                <button className="btn-primary">
+                  <UserPlusIcon className="btn-icon" />
+                  Add New User
+                </button>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="stats-row">
+                <div className="stat-card">
+                  <span className="stat-label">Total Users</span>
+                  <span className="stat-value">{totalUsers}</span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Active Users</span>
+                  <span className="stat-value">
+                    {users.filter(u => u.isActive !== false).length}
+                  </span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Admin Users</span>
+                  <span className="stat-value">
+                    {users.filter(u => u.role === 'admin').length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="filters-section">
+              <div className="search-box">
+                <MagnifyingGlassIcon className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search users by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <button onClick={handleSearch} className="search-btn">
+                  Search
+                </button>
+              </div>
+
+              <div className="filter-controls">
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">All Roles</option>
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+
+                <button onClick={clearFilters} className="btn-secondary">
+                  <FunnelIcon className="btn-icon" />
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+
+            {/* Users Table */}
+            <div className="table-container">
+              {loading ? (
+                <div className="loading-state">
+                  <div className="loading-spinner"></div>
+                  <span>Loading users...</span>
+                </div>
+              ) : error ? (
+                <div className="error-state">
+                  <ExclamationTriangleIcon className="error-icon" />
+                  <span>{error}</span>
+                </div>
+              ) : (
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user._id}>
+                        <td>
+                          <div className="user-cell">
+                            <div className="user-avatar">
+                              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div className="user-info">
+                              <span className="user-name">{user.name}</span>
+                              <span className="user-email">{user.email}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{getRoleBadge(user.role)}</td>
+                        <td>{getStatusBadge(user.isActive !== false)}</td>
+                        <td>{formatDate(user.createdAt)}</td>
+                        <td>
+                          <div className="action-buttons">
+                            <button
+                              onClick={() => openEditModal(user)}
+                              className="btn-icon-only edit"
+                              title="Edit User"
+                            >
+                              <PencilIcon className="action-icon" />
+                            </button>
+                            <button
+                              onClick={() => handleToggleUserStatus(user)}
+                              className={`btn-icon-only ${user.isActive !== false ? 'deactivate' : 'activate'}`}
+                              title={user.isActive !== false ? 'Deactivate User' : 'Activate User'}
+                            >
+                              {user.isActive !== false ? (
+                                <XCircleIcon className="action-icon" />
+                              ) : (
+                                <CheckCircleIcon className="action-icon" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(user)}
+                              className="btn-icon-only delete"
+                              title="Delete User"
+                            >
+                              <TrashIcon className="action-icon" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => prev - 1);
+                    fetchUsers(currentPage - 1);
+                  }}
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                >
+                  <ChevronLeftIcon className="pagination-icon" />
+                  Previous
+                </button>
+
+                <div className="pagination-info">
+                  Page {currentPage} of {totalPages}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => prev + 1);
+                    fetchUsers(currentPage + 1);
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="pagination-btn"
+                >
+                  Next
+                  <ChevronRightIcon className="pagination-icon" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Edit User Modal */}
+      {showEditModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Edit User</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="modal-close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="edit-name">Name</label>
+                <input
+                  id="edit-name"
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="edit-email">Email</label>
+                <input
+                  id="edit-email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="edit-role">Role</label>
+                <select
+                  id="edit-role"
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                  className="form-select"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={updateUser}
+                className="btn-primary"
+              >
+                Update User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal modal-danger">
+            <div className="modal-header">
+              <h3>Delete User Account</h3>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setHasReadDeleteNotice(false);
+                }}
+                className="modal-close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="danger-content">
+                <ExclamationTriangleIcon className="danger-icon" />
+                <h4>⚠️ CRITICAL WARNING - PERMANENT ACTION</h4>
+                
+                <div className="notice-section">
+                  <p><strong>You are about to permanently delete the user account for:</strong></p>
+                  <div className="user-details">
+                    <p><strong>Name:</strong> {selectedUser?.name}</p>
+                    <p><strong>Email:</strong> {selectedUser?.email}</p>
+                    <p><strong>Role:</strong> {selectedUser?.role}</p>
+                  </div>
+                  
+                  <div className="warning-text">
+                    <h5>🚨 IMPORTANT CONSEQUENCES:</h5>
+                    <ul>
+                      <li><strong>IRREVERSIBLE ACTION:</strong> This deletion cannot be undone. All user data will be permanently removed from the system.</li>
+                      <li><strong>DATA LOSS:</strong> All projects, saved work, preferences, and user-generated content associated with this account will be permanently deleted.</li>
+                      <li><strong>ACCESS TERMINATION:</strong> The user will immediately lose access to their account and all associated services.</li>
+                      <li><strong>AUDIT TRAIL:</strong> User activities and history will be removed, which may affect reporting and compliance.</li>
+                      <li><strong>SYSTEM REFERENCES:</strong> Any system references to this user may become invalid and could affect related functionalities.</li>
+                      <li><strong>LEGAL IMPLICATIONS:</strong> Ensure you have proper authorization and have followed your organization's data retention policies.</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="alternative-notice">
+                    <p><strong>💡 RECOMMENDED ALTERNATIVE:</strong> Consider deactivating the user instead of deleting. Deactivation preserves data while preventing access, and can be reversed if needed.</p>
+                  </div>
+                  
+                  <div className="confirmation-checkbox">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={hasReadDeleteNotice}
+                        onChange={(e) => setHasReadDeleteNotice(e.target.checked)}
+                        className="confirmation-checkbox-input"
+                      />
+                      <span className="checkmark"></span>
+                      I have read and understand the consequences of this action. I confirm that I have proper authorization to delete this user account and understand this action is irreversible.
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setHasReadDeleteNotice(false);
+                }}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteUser}
+                disabled={!hasReadDeleteNotice}
+                className={`btn-danger ${!hasReadDeleteNotice ? 'disabled' : ''}`}
+              >
+                {hasReadDeleteNotice ? 'Permanently Delete User' : 'Please Read Notice First'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deactivate Confirmation Modal */}
+      {showDeactivateModal && (
+        <div className="modal-overlay">
+          <div className="modal modal-warning">
+            <div className="modal-header">
+              <h3>Deactivate User Account</h3>
+              <button
+                onClick={() => {
+                  setShowDeactivateModal(false);
+                  setHasReadDeactivateNotice(false);
+                }}
+                className="modal-close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="warning-content">
+                <ExclamationTriangleIcon className="warning-icon" />
+                <h4>⚠️ Account Deactivation Notice</h4>
+                
+                <div className="notice-section">
+                  <p><strong>You are about to deactivate the user account for:</strong></p>
+                  <div className="user-details">
+                    <p><strong>Name:</strong> {selectedUser?.name}</p>
+                    <p><strong>Email:</strong> {selectedUser?.email}</p>
+                    <p><strong>Role:</strong> {selectedUser?.role}</p>
+                  </div>
+                  
+                  <div className="deactivation-notice">
+                    <h5>📋 What happens when you deactivate this account:</h5>
+                    <ul>
+                      <li><strong>IMMEDIATE ACCESS SUSPENSION:</strong> The user will be immediately logged out and unable to sign in to their account.</li>
+                      <li><strong>DATA PRESERVATION:</strong> All user data, projects, and work history will be preserved in the system for future reference or potential reactivation.</li>
+                      <li><strong>SERVICE INTERRUPTION:</strong> The user will lose access to all platform features, tools, and services associated with their account.</li>
+                      <li><strong>COLLABORATION IMPACT:</strong> If this user is involved in shared projects or teams, their absence may affect ongoing collaborative work.</li>
+                      <li><strong>NOTIFICATIONS DISABLED:</strong> The user will stop receiving email notifications and system updates.</li>
+                      <li><strong>API ACCESS REVOKED:</strong> Any API keys or integrations associated with this account will be temporarily disabled.</li>
+                      <li><strong>REVERSIBLE ACTION:</strong> Unlike deletion, account deactivation can be reversed. You can reactivate this account at any time, and the user will regain full access to their preserved data and settings.</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="recommendation-notice">
+                    <p><strong>💡 RECOMMENDATION:</strong> Account deactivation is the preferred method for temporarily suspending user access while preserving their work and maintaining system integrity. This action should be taken when you need to restrict access but may want to restore it in the future.</p>
+                  </div>
+                  
+                  <div className="confirmation-checkbox">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={hasReadDeactivateNotice}
+                        onChange={(e) => setHasReadDeactivateNotice(e.target.checked)}
+                        className="confirmation-checkbox-input"
+                      />
+                      <span className="checkmark"></span>
+                      I have read and understand the impact of deactivating this user account. I confirm that I have proper authorization to perform this action and understand it will immediately suspend the user's access to the platform.
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                onClick={() => {
+                  setShowDeactivateModal(false);
+                  setHasReadDeactivateNotice(false);
+                }}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => toggleUserStatus(selectedUser)}
+                disabled={!hasReadDeactivateNotice}
+                className={`btn-warning ${!hasReadDeactivateNotice ? 'disabled' : ''}`}
+              >
+                {hasReadDeactivateNotice ? 'Deactivate User Account' : 'Please Read Notice First'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UserManagement;

@@ -57,3 +57,18 @@
 {"level":"info","message":"User logged in: cocomeme@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-22 10:39:19"}
 {"level":"info","message":"User logged in: admin@renderhaus.com","service":"renderhaus-backend","timestamp":"2025-07-22 11:07:58"}
 {"level":"info","message":"User logged in: admin@renderhaus.com","service":"renderhaus-backend","timestamp":"2025-07-22 11:09:23"}
+{"level":"info","message":"User logged in: admin@renderhaus.com","service":"renderhaus-backend","timestamp":"2025-07-23 13:23:33"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:35:01"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:35:01"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:35:50"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:35:59"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:02"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:03"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:08"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:15"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:32"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:32"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 deactivated user 687eeebecaf807a0dabdb02a","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:43"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:43"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 activated user 687eeebecaf807a0dabdb02a","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:50"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:51"}
