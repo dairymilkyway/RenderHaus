@@ -72,3 +72,7 @@
 {"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:43"}
 {"level":"info","message":"Admin 687f001daa40695f49801561 activated user 687eeebecaf807a0dabdb02a","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:50"}
 {"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:36:51"}
+{"level":"info","message":"User logged in: admin@renderhaus.com","service":"renderhaus-backend","timestamp":"2025-07-23 13:50:29"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:50:36"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:50:36"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-23 13:56:23"}

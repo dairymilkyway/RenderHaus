@@ -2,6 +2,42 @@
 .user-management {
   max-width: 1400px;
   margin: 0 auto;
+  min-height: calc(100vh - 4rem); /* Ensure minimum height */
+}
+
+/* Override admin layout scrolling for UserManagement */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.admin-content {
+  flex: 1;
+  margin-left: 280px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Hide scrollbar for webkit browsers */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.admin-main::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Smooth scrolling behavior */
+.admin-main {
+  scroll-behavior: smooth;
 }
 
 /* Page Header */
@@ -624,10 +660,27 @@
 @media (max-width: 768px) {
   .admin-content {
     margin-left: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .admin-main {
+    padding: 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    /* Hide scrollbar on mobile */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .admin-main::-webkit-scrollbar {
+    display: none;
   }
   
   .user-management {
-    padding: 1rem;
+    margin: 0;
+    min-height: calc(100vh - 2rem);
   }
   
   .header-content {
@@ -855,6 +908,28 @@
   background: #d1d5db;
   transform: none;
   box-shadow: none;
+}
+
+/* Form validation styles */
+.form-input.error,
+.form-select.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.form-help {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+  line-height: 1.4;
 }
 
 /* Modal responsiveness for enhanced modals */

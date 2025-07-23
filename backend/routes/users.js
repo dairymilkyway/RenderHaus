@@ -20,6 +20,9 @@ router.get('/stats/overview', auth, adminOnly, userController.getUserStats);
 // Get all users (admin only)
 router.get('/', auth, adminOnly, userController.getAllUsers);
 
+// Create new user (admin only)
+router.post('/', auth, adminOnly, userController.createUser);
+
 // Get user by ID (admin only)
 router.get('/:id', auth, adminOnly, userController.getUserById);
 

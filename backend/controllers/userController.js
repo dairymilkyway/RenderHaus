@@ -69,6 +69,55 @@ exports.getAllUsers = async (req, res, next) => {
   }
 };
 
+// Create new user
+exports.createUser = async (req, res, next) => {
+  try {
+    const { name, email, password, role = 'user' } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      throw new ValidationError('Name, email, and password are required');
+    }
+
+    if (password.length < 6) {
+      throw new ValidationError('Password must be at least 6 characters long');
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      throw new ValidationError('User with this email already exists');
+    }
+
+    // Create new user
+    const user = new User({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+      role: ['user', 'admin'].includes(role) ? role : 'user',
+      isActive: true
+    });
+
+    await user.save();
+
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    logger.info(`New user created: ${email} by admin: ${req.user.email}`);
+
+    res.status(201).json({
+      status: 'success',
+      message: 'User created successfully',
+      data: {
+        user: userResponse
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get user by ID
 exports.getUserById = async (req, res, next) => {
   try {

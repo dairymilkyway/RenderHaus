@@ -37,6 +37,7 @@ const UserManagement = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   
   // Confirmation checkboxes
@@ -49,6 +50,18 @@ const UserManagement = () => {
     email: '',
     role: 'user'
   });
+
+  // Add user form
+  const [addUserForm, setAddUserForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'user'
+  });
+
+  // Form validation
+  const [formErrors, setFormErrors] = useState({});
 
   // Fetch users
   const fetchUsers = async (page = 1) => {
@@ -117,6 +130,97 @@ const UserManagement = () => {
     } catch (err) {
       toast.error(err.message);
     }
+  };
+
+  // Validate add user form
+  const validateAddUserForm = () => {
+    const errors = {};
+    
+    // Name validation
+    if (!addUserForm.name.trim()) {
+      errors.name = 'Name is required';
+    } else if (addUserForm.name.trim().length < 2) {
+      errors.name = 'Name must be at least 2 characters';
+    }
+    
+    // Email validation
+    if (!addUserForm.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addUserForm.email)) {
+      errors.email = 'Invalid email format';
+    }
+    
+    // Password validation
+    if (!addUserForm.password) {
+      errors.password = 'Password is required';
+    } else if (addUserForm.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+    
+    // Confirm password validation
+    if (!addUserForm.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (addUserForm.password !== addUserForm.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Add new user
+  const addUser = async () => {
+    if (!validateAddUserForm()) {
+      toast.error('Please fix the form errors before submitting');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const { confirmPassword, ...userData } = addUserForm;
+      
+      const response = await fetch('http://localhost:5000/api/users', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create user');
+      }
+
+      toast.success('User created successfully!');
+      setShowAddUserModal(false);
+      setAddUserForm({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        role: 'user'
+      });
+      setFormErrors({});
+      fetchUsers(currentPage);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Handle add user modal
+  const openAddUserModal = () => {
+    setShowAddUserModal(true);
+    setAddUserForm({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'user'
+    });
+    setFormErrors({});
   };
 
   // Toggle user status
@@ -286,7 +390,7 @@ const UserManagement = () => {
                     Manage and monitor all users in your system
                   </p>
                 </div>
-                <button className="btn-primary">
+                <button className="btn-primary" onClick={openAddUserModal}>
                   <UserPlusIcon className="btn-icon" />
                   Add New User
                 </button>
@@ -528,6 +632,132 @@ const UserManagement = () => {
                 className="btn-primary"
               >
                 Update User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Add New User</h3>
+              <button
+                onClick={() => {
+                  setShowAddUserModal(false);
+                  setFormErrors({});
+                }}
+                className="modal-close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="add-name">Full Name *</label>
+                <input
+                  id="add-name"
+                  type="text"
+                  value={addUserForm.name}
+                  onChange={(e) => {
+                    setAddUserForm({...addUserForm, name: e.target.value});
+                    if (formErrors.name) {
+                      setFormErrors({...formErrors, name: ''});
+                    }
+                  }}
+                  className={`form-input ${formErrors.name ? 'error' : ''}`}
+                  placeholder="Enter user's full name"
+                />
+                {formErrors.name && <span className="error-text">{formErrors.name}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="add-email">Email Address *</label>
+                <input
+                  id="add-email"
+                  type="email"
+                  value={addUserForm.email}
+                  onChange={(e) => {
+                    setAddUserForm({...addUserForm, email: e.target.value});
+                    if (formErrors.email) {
+                      setFormErrors({...formErrors, email: ''});
+                    }
+                  }}
+                  className={`form-input ${formErrors.email ? 'error' : ''}`}
+                  placeholder="Enter user's email address"
+                />
+                {formErrors.email && <span className="error-text">{formErrors.email}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="add-password">Password *</label>
+                <input
+                  id="add-password"
+                  type="password"
+                  value={addUserForm.password}
+                  onChange={(e) => {
+                    setAddUserForm({...addUserForm, password: e.target.value});
+                    if (formErrors.password) {
+                      setFormErrors({...formErrors, password: ''});
+                    }
+                  }}
+                  className={`form-input ${formErrors.password ? 'error' : ''}`}
+                  placeholder="Enter a secure password (min. 6 characters)"
+                />
+                {formErrors.password && <span className="error-text">{formErrors.password}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="add-confirm-password">Confirm Password *</label>
+                <input
+                  id="add-confirm-password"
+                  type="password"
+                  value={addUserForm.confirmPassword}
+                  onChange={(e) => {
+                    setAddUserForm({...addUserForm, confirmPassword: e.target.value});
+                    if (formErrors.confirmPassword) {
+                      setFormErrors({...formErrors, confirmPassword: ''});
+                    }
+                  }}
+                  className={`form-input ${formErrors.confirmPassword ? 'error' : ''}`}
+                  placeholder="Confirm the password"
+                />
+                {formErrors.confirmPassword && <span className="error-text">{formErrors.confirmPassword}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="add-role">Role</label>
+                <select
+                  id="add-role"
+                  value={addUserForm.role}
+                  onChange={(e) => setAddUserForm({...addUserForm, role: e.target.value})}
+                  className="form-select"
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <small className="form-help">
+                  Users have basic access, Admins can manage other users and system settings
+                </small>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                onClick={() => {
+                  setShowAddUserModal(false);
+                  setFormErrors({});
+                }}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addUser}
+                className="btn-primary"
+              >
+                Create User
               </button>
             </div>
           </div>
