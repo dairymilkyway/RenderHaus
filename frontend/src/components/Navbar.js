@@ -38,6 +38,9 @@ const Navbar = ({ user, onLogout }) => {
 
   // Get user initials for avatar
   const getInitials = (name) => {
+    if (!name || typeof name !== 'string') {
+      return 'U'; // Default to 'U' for User if name is not available
+    }
     return name
       .split(' ')
       .map(word => word[0])
@@ -95,7 +98,7 @@ const Navbar = ({ user, onLogout }) => {
           ) : (
             <div className="nav-user-section">
               <div className="welcome-message">
-                Welcome back, <span className="user-name-highlight">{user.name}</span>!
+                Welcome back, <span className="user-name-highlight">{user.name || 'User'}</span>!
               </div>
               <NavLink to="/dashboard">
                 <ChartBarIcon className="nav-icon" />
@@ -111,7 +114,7 @@ const Navbar = ({ user, onLogout }) => {
                       {getInitials(user.name)}
                     </div>
                     <div className="user-info-text">
-                      <span className="nav-user-name">{user.name.split(' ')[0]}</span>
+                      <span className="nav-user-name">{user.name ? user.name.split(' ')[0] : 'User'}</span>
                       <span className="nav-user-role">{user.role}</span>
                     </div>
                     <ChevronDownIcon className="nav-icon-small" style={{
@@ -126,7 +129,7 @@ const Navbar = ({ user, onLogout }) => {
                       <div className="user-avatar">
                         {getInitials(user.name)}
                       </div>
-                      <span className="dropdown-user-name">{user.name}</span>
+                      <span className="dropdown-user-name">{user.name || 'User'}</span>
                       <span className="dropdown-user-email">{user.email}</span>
                     </div>
                     <NavLink to="/profile" className="dropdown-item">

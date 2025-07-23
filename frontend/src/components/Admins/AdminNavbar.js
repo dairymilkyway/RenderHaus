@@ -23,7 +23,9 @@ const AdminNavbar = () => {
 
   // Get user initials for avatar
   const getInitials = (name) => {
-    if (!name) return 'A';
+    if (!name || typeof name !== 'string') {
+      return 'A'; // Default to 'A' for Admin if name is not available
+    }
     return name
       .split(' ')
       .map(word => word[0])
