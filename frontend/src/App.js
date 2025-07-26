@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Login from './components/Login';
-import Register from './components/Register';
+import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import Navbar from './components/Navbar';
@@ -16,7 +15,6 @@ import ReportManagement from './components/Admins/ReportManagement';
 import './App.css';
 
 function App() {
-  const [isLoginView, setIsLoginView] = useState(true);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -43,11 +41,7 @@ function App() {
         return <Navigate to="/dashboard" replace />;
       }
     }
-    return isLoginView ? (
-      <Login onSwitchToRegister={() => setIsLoginView(false)} />
-    ) : (
-      <Register onSwitchToLogin={() => setIsLoginView(true)} />
-    );
+    return <Auth />;
   };
 
   return (

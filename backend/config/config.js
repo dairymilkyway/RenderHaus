@@ -28,5 +28,14 @@ module.exports = {
   rateLimit: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100 // limit each IP to 100 requests per windowMs
+  },
+
+  // Email configuration
+  email: {
+    otpExpiry: 10 * 60 * 1000, // 10 minutes in milliseconds
+    mailtrap: {
+      user: process.env.MAILTRAP_USER,
+      pass: process.env.MAILTRAP_PASS
+    }
   }
 }; 

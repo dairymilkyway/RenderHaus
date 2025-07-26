@@ -15,7 +15,7 @@ const fadeInUp = {
   transition: { duration: 0.5 }
 };
 
-const Login = ({ onSwitchToRegister }) => {
+const Login = ({ onSwitchToRegister, onShowEmailVerification }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -41,7 +41,20 @@ const Login = ({ onSwitchToRegister }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        const errorMessage = data.message || 'Login failed';
+        
+        // Check if error is related to email verification
+        if (errorMessage.includes('verify your email') && onShowEmailVerification) {
+          // Show toast notification and auto-redirect after it closes
+          toast.error('Please verify your email before logging in.', {
+            onClose: () => {
+              onShowEmailVerification(formData.email);
+            }
+          });
+          return;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Save tokens and user data

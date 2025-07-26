@@ -15,11 +15,12 @@ const fadeInUp = {
   transition: { duration: 0.5 }
 };
 
-const Register = ({ onSwitchToLogin }) => {
+const Register = ({ onSwitchToLogin, onShowEmailVerification }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    name: ''
+    name: '',
+    gender: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,16 +45,10 @@ const Register = ({ onSwitchToLogin }) => {
         throw new Error(data.message || 'Registration failed');
       }
 
-      // Save tokens and user data
-      localStorage.setItem('accessToken', data.data.tokens.accessToken);
-      localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
-      localStorage.setItem('user', JSON.stringify(data.data.user));
-
-      // Show success notification
-      toast.success('Registration successful! Welcome to RenderHaus!', {
+      // Show success notification and redirect to email verification
+      toast.success('Registration successful! Please check your email for verification code.', {
         onClose: () => {
-          // Redirect to dashboard and reload page after notification
-          window.location.href = '/dashboard';
+          onShowEmailVerification(formData.email);
         }
       });
     } catch (err) {
@@ -132,6 +127,26 @@ const Register = ({ onSwitchToLogin }) => {
                 required
                 disabled={loading}
               />
+            </motion.div>
+
+            <motion.div className="form-group" {...fadeInUp}>
+              <label htmlFor="gender">
+                <UserIcon className="input-icon" />
+              </label>
+              <select
+                id="gender"
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="gender-select"
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
             </motion.div>
 
             <motion.div className="form-group" {...fadeInUp}>
