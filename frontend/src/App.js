@@ -12,6 +12,7 @@ import Unauthorized from './components/Unauthorized';
 import AdminDashboard from './components/Admins/AdminDashboard';
 import UserManagement from './components/Admins/UserManagement';
 import ModelManagement from './components/Admins/ModelManagement';
+import ReportManagement from './components/Admins/ReportManagement';
 import './App.css';
 
 function App() {
@@ -87,6 +88,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <ModelManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ReportManagement />
               </ProtectedRoute>
             }
           />
