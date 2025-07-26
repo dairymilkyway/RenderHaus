@@ -17,6 +17,9 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(null);
+  const [placedModels, setPlacedModels] = useState([]);
+  const [isPlacedModelsMinimized, setIsPlacedModelsMinimized] = useState(false);
   const [modelScales, setModelScales] = useState({
     furniture: 0.08,
     roomTemplate: 0.8
@@ -115,9 +118,89 @@ const Dashboard = () => {
     setActiveSection(section);
   };
 
-  const handleTemplateSelect = (template) => {
+  const handleTemplateSelect = useCallback((template) => {
     setSelectedTemplate(template);
-  };
+  }, []);
+
+  const handleModelSelect = useCallback((model) => {
+    if (!model) {
+      setSelectedModel(null);
+      return;
+    }
+    
+    // Ensure the model has all required properties with defaults
+    const modelWithDefaults = {
+      ...model,
+      position: model.position || [0, 0.6, 0],
+      scale: model.scale || [0.1, 0.1, 0.1],
+      rotation: model.rotation || [0, 0, 0]
+    };
+    setSelectedModel(modelWithDefaults);
+  }, []);
+
+  const handleAddModel = useCallback((model) => {
+    setPlacedModels(prev => [...prev, model]);
+    // Clear the selected template to prevent continuous adding
+    setSelectedTemplate(null);
+  }, []);
+
+  const handleRemoveModel = useCallback((modelId) => {
+    setPlacedModels(prev => prev.filter(model => model.id !== modelId));
+    // If the removed model was selected, deselect it
+    setSelectedModel(prev => prev?.id === modelId ? null : prev);
+  }, []);
+
+  const handleScaleChange = useCallback((scaleValue) => {
+    if (selectedModel) {
+      // Update only the selected model's scale
+      const updatedModel = {
+        ...selectedModel,
+        scale: [scaleValue, scaleValue, scaleValue]
+      };
+      setSelectedModel(updatedModel);
+      
+      // Also update in the placed models list
+      setPlacedModels(prev => 
+        prev.map(model => 
+          model.id === selectedModel.id ? updatedModel : model
+        )
+      );
+    }
+  }, [selectedModel]);
+
+  const handleRotationChange = useCallback((rotationValue) => {
+    if (selectedModel) {
+      // Update only the selected model's rotation (Y-axis rotation in radians)
+      const updatedModel = {
+        ...selectedModel,
+        rotation: [0, rotationValue, 0]
+      };
+      setSelectedModel(updatedModel);
+      
+      // Also update in the placed models list
+      setPlacedModels(prev => 
+        prev.map(model => 
+          model.id === selectedModel.id ? updatedModel : model
+        )
+      );
+    }
+  }, [selectedModel]);
+
+  const handlePositionUpdate = useCallback((axis, value) => {
+    if (!selectedModel) return;
+    
+    const newPosition = [...selectedModel.position];
+    if (axis === 'x') newPosition[0] = parseFloat(value);
+    if (axis === 'z') newPosition[2] = parseFloat(value);
+    
+    setPlacedModels(prev => 
+      prev.map(model => 
+        model.id === selectedModel.id ? { ...model, position: newPosition } : model
+      )
+    );
+    
+    setSelectedModel(prev => ({ ...prev, position: newPosition }));
+  }, [selectedModel]);
 
   if (loading) {
     return <div className="dashboard-loading">Loading...</div>;
@@ -146,40 +229,105 @@ const Dashboard = () => {
                 </button>
               </div>
               
-              {/* Size Adjuster Controls */}
-              <div className="size-controls">
-                <div className="size-control-group">
-                  <label>Furniture Size:</label>
-                  <input
-                    type="range"
-                    min="0.01"
-                    max="0.5"
-                    step="0.01"
-                    value={modelScales.furniture}
-                    onChange={(e) => setModelScales({
-                      ...modelScales,
-                      furniture: parseFloat(e.target.value)
-                    })}
-                    className="size-slider"
-                  />
-                  <span className="size-value">{(modelScales.furniture * 100).toFixed(0)}%</span>
-                </div>
-                <div className="size-control-group">
-                  <label>Room Template Size:</label>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="2.0"
-                    step="0.1"
-                    value={modelScales.roomTemplate}
-                    onChange={(e) => setModelScales({
-                      ...modelScales,
-                      roomTemplate: parseFloat(e.target.value)
-                    })}
-                    className="size-slider"
-                  />
-                  <span className="size-value">{(modelScales.roomTemplate * 100).toFixed(0)}%</span>
-                </div>
+              {/* Model Controls */}
+              <div className="model-controls">
+                {selectedModel ? (
+                  <div className="horizontal-control-layout">
+                    <div className="control-header">
+                      <div className="model-info">
+                        <span className="model-name">{selectedModel.name}</span>
+                        <span className="model-type">{selectedModel.type === 'room' ? 'Room Template' : 'Component'}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="horizontal-controls">
+                      {/* Size Control */}
+                      <div className="control-section">
+                        <label>Size</label>
+                        <div className="control-input">
+                          <input
+                            type="range"
+                            min="0.01"
+                            max={selectedModel.type === 'room' ? "2.0" : "0.5"}
+                            step="0.01"
+                            value={selectedModel.scale?.[0] || 0.1}
+                            onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
+                            className="compact-slider"
+                          />
+                          <span className="control-value">{((selectedModel.scale?.[0] || 0.1) * 100).toFixed(0)}%</span>
+                        </div>
+                      </div>
+
+                      {/* Rotation Control */}
+                      <div className="control-section">
+                        <label>Rotation</label>
+                        <div className="control-input">
+                          <input
+                            type="range"
+                            min="0"
+                            max={Math.PI * 2}
+                            step="0.1"
+                            value={selectedModel.rotation?.[1] || 0}
+                            onChange={(e) => handleRotationChange(parseFloat(e.target.value))}
+                            className="compact-slider"
+                          />
+                          <span className="control-value">{selectedModel.rotation ? Math.round((selectedModel.rotation[1] * 180) / Math.PI) : 0}°</span>
+                        </div>
+                      </div>
+
+                      {/* Position Controls */}
+                      <div className="control-section">
+                        <label>Position</label>
+                        <div className="position-controls-horizontal">
+                          <div className="pos-control-inline">
+                            <span>X:</span>
+                            <input
+                              type="range"
+                              min="-2.5"
+                              max="2.5"
+                              step="0.1"
+                              value={selectedModel.position?.[0] || 0}
+                              onChange={(e) => handlePositionUpdate('x', e.target.value)}
+                              className="compact-slider"
+                            />
+                            <span className="control-value">{(selectedModel.position?.[0] || 0).toFixed(1)}</span>
+                          </div>
+                          <div className="pos-control-inline">
+                            <span>Z:</span>
+                            <input
+                              type="range"
+                              min="-2"
+                              max="2"
+                              step="0.1"
+                              value={selectedModel.position?.[2] || 0}
+                              onChange={(e) => handlePositionUpdate('z', e.target.value)}
+                              className="compact-slider"
+                            />
+                            <span className="control-value">{(selectedModel.position?.[2] || 0).toFixed(1)}</span>
+                          </div>
+                        </div>
+                        <button 
+                          className="center-btn"
+                          onClick={() => {
+                            const newPos = [0, 0.6, 0];
+                            setPlacedModels(prev => 
+                              prev.map(model => 
+                                model.id === selectedModel.id ? { ...model, position: newPos } : model
+                              )
+                            );
+                            setSelectedModel(prev => ({ ...prev, position: newPos }));
+                          }}
+                        >
+                          Center
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="control-placeholder">
+                    <span>Select a model from the list to adjust its properties</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -189,6 +337,10 @@ const Dashboard = () => {
         <Canvas 
           selectedTemplate={selectedTemplate} 
           modelScales={modelScales}
+          selectedModel={selectedModel}
+          onModelSelect={handleModelSelect}
+          onAddModel={handleAddModel}
+          placedModels={placedModels}
         />
 
         {/* Tutorial Overlay (if shown) */}
@@ -199,6 +351,70 @@ const Dashboard = () => {
               <p>Let's get you started with the basics...</p>
               {/* Tutorial steps would go here */}
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Middle Panel - Placed Models List */}
+      <div className={`placed-models-panel ${isPlacedModelsMinimized ? 'minimized' : ''}`}>
+        <div className="panel-header">
+          <h3>Placed Models</h3>
+          <div className="panel-controls">
+            <span className="model-count">{placedModels.length} items</span>
+            <button 
+              className="minimize-button"
+              onClick={() => setIsPlacedModelsMinimized(!isPlacedModelsMinimized)}
+              title={isPlacedModelsMinimized ? 'Maximize panel' : 'Minimize panel'}
+            >
+              {isPlacedModelsMinimized ? '□' : '−'}
+            </button>
+          </div>
+        </div>
+        
+        {!isPlacedModelsMinimized && (
+          <div className="models-list">
+            {placedModels.length === 0 ? (
+              <div className="empty-list">
+                <p>No models placed yet</p>
+                <span>Add models from the library →</span>
+              </div>
+            ) : (
+              placedModels.map((model) => (
+                <div
+                  key={model.id}
+                  className={`model-item ${selectedModel?.id === model.id ? 'selected' : ''}`}
+                  onClick={() => handleModelSelect(model)}
+                >
+                  <div className="model-info">
+                    <div className="model-name">{model.name}</div>
+                    <div className="model-type">
+                      {model.type === 'room' ? 'Room Template' : 'Component'}
+                    </div>
+                    <div className="model-properties">
+                      <span className="model-scale">
+                        Scale: {(model.scale[0] * 100).toFixed(0)}%
+                      </span>
+                      <span className="model-rotation">
+                        Rotation: {model.rotation ? Math.round((model.rotation[1] * 180) / Math.PI) : 0}°
+                      </span>
+                      <span className="model-position">
+                        Pos: ({model.position[0].toFixed(1)}, {model.position[2].toFixed(1)})
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    className="remove-model-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveModel(model.id);
+                  }}
+                  title="Remove model"
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          )}
           </div>
         )}
       </div>

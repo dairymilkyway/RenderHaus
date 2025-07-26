@@ -1,11 +1,16 @@
 .dashboard-container {
   display: grid;
-  grid-template-columns: 80px 1fr 300px;
+  grid-template-columns: 80px 1fr 250px 300px;
   grid-template-rows: 1fr;
   height: 100vh;
   background-color: #f8fafc;
   position: relative;
   overflow: hidden;
+}
+
+/* Responsive layout when placed models panel is minimized */
+.dashboard-container:has(.placed-models-panel.minimized) {
+  grid-template-columns: 80px 1fr 80px 300px;
 }
 
 /* Main Content Area */
@@ -17,10 +22,11 @@
 }
 
 .dashboard-topbar {
-  padding: 1rem 2rem;
+  padding: 0.75rem 2rem;
   background-color: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
+  min-height: fit-content;
 }
 
 .project-info {
@@ -95,32 +101,256 @@
   color: #64748b;
 }
 
-/* Size Controls */
-.size-controls {
+/* Model Controls */
+.model-controls {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.375rem;
   margin-left: 2rem;
-  padding: 1rem;
+  padding: 0.5rem;
   background-color: #f8fafc;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid #e2e8f0;
+  min-width: 700px;
+  max-height: 80px;
+  flex-shrink: 0;
 }
 
-.size-control-group {
+/* Horizontal Control Layout */
+.horizontal-control-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.control-header {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+}
+
+.control-header .model-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
-.size-control-group label {
-  font-size: 0.875rem;
+.control-header .model-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.control-header .model-type {
+  font-size: 0.7rem;
+  color: #6b7280;
+  background-color: #e5e7eb;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+}
+
+.horizontal-controls {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.control-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 200px;
+}
+
+.control-section label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #374151;
+  min-width: 45px;
+  text-align: left;
+}
+
+.control-input {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.compact-slider {
+  width: 120px;
+  height: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e5e7eb;
+  border-radius: 7px;
+  outline: none;
+  flex: 1;
+}
+
+.compact-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+}
+
+.compact-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: none;
+}
+
+.control-value {
+  font-size: 0.7rem;
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 35px;
+  text-align: center;
+}
+
+/* Position Controls Horizontal Layout */
+.position-controls-horizontal {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.pos-control-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+}
+
+.pos-control-inline span:first-child {
+  min-width: 12px;
   font-weight: 500;
   color: #374151;
-  min-width: 120px;
 }
 
-.size-slider {
+.pos-control-inline .compact-slider {
+  width: 80px;
+  flex: none;
+}
+
+.pos-control-inline .control-value {
+  min-width: 25px;
+  font-size: 0.65rem;
+}
+
+.center-btn {
+  padding: 0.25rem 0.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.center-btn:hover {
+  background-color: #2563eb;
+}
+
+/* Compact Controls for smaller UI */
+.compact-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.compact-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.compact-input span:first-child {
+  min-width: 15px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.mini-slider {
+  flex: 1;
+  height: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e5e7eb;
+  border-radius: 8px;
+  outline: none;
+}
+
+.mini-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+}
+
+.mini-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: none;
+}
+
+.mini-value {
+  min-width: 30px;
+  text-align: right;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.mini-button {
+  align-self: flex-start;
+  padding: 0.25rem 0.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.mini-button:hover {
+  background-color: #2563eb;
+}
+
+.control-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: #f1f5f9;
+  border-radius: 6px;
+  border: 2px dashed #cbd5e1;
+}
+
+.control-placeholder span {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.control-slider {
   flex: 1;
   height: 6px;
   background: #e2e8f0;
@@ -130,7 +360,7 @@
   cursor: pointer;
 }
 
-.size-slider::-webkit-slider-thumb {
+.control-slider::-webkit-slider-thumb {
   appearance: none;
   width: 18px;
   height: 18px;
@@ -140,11 +370,11 @@
   transition: background-color 0.2s;
 }
 
-.size-slider::-webkit-slider-thumb:hover {
+.control-slider::-webkit-slider-thumb:hover {
   background: #2563eb;
 }
 
-.size-slider::-moz-range-thumb {
+.control-slider::-moz-range-thumb {
   width: 18px;
   height: 18px;
   background: #3b82f6;
@@ -154,14 +384,257 @@
   transition: background-color 0.2s;
 }
 
-.size-slider::-moz-range-thumb:hover {
+.control-slider::-moz-range-thumb:hover {
   background: #2563eb;
 }
 
-.size-value {
+.control-value {
   font-size: 0.875rem;
   font-weight: 600;
   color: #3b82f6;
   min-width: 40px;
   text-align: right;
+}
+
+/* Position Controls */
+.position-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.position-controls label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.position-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.position-info span {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.position-hint {
+  font-style: italic;
+  color: #9ca3af !important;
+}
+
+.position-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.position-inputs .input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.position-inputs .input-group label {
+  flex: 0 0 120px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.center-button {
+  align-self: flex-start;
+  padding: 0.375rem 0.75rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 0.25rem;
+}
+
+.center-button:hover {
+  background-color: #2563eb;
+}
+
+/* Placed Models Panel */
+.placed-models-panel {
+  background-color: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+.placed-models-panel.minimized {
+  width: 80px !important;
+}
+
+.panel-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8fafc;
+}
+
+.panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.placed-models-panel.minimized .panel-header h3 {
+  display: none;
+}
+
+.model-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background-color: #e5e7eb;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+}
+
+.placed-models-panel.minimized .model-count {
+  display: none;
+}
+
+.minimize-button {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.minimize-button:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.models-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.empty-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-list p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.empty-list span {
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.model-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+}
+
+.model-item:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+}
+
+.model-item.selected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+.model-info {
+  flex: 1;
+}
+
+.model-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.model-type {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.model-properties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.model-scale, .model-rotation, .model-position {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.remove-model-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.remove-model-btn:hover {
+  background-color: #fecaca;
+  transform: scale(1.1);
 } 

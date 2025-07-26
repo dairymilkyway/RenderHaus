@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Canvas as ThreeCanvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Grid } from '@react-three/drei';
+import { OrbitControls, Grid, useDragControls } from '@react-three/drei';
 import * as THREE from 'three';
 import Model3D from './Model3D';
 import './css/Canvas.css';
@@ -90,6 +90,35 @@ const createStableTexture = (type) => {
 // Create textures once
 const grassTexture = createStableTexture('grass');
 const dirtTexture = createStableTexture('dirt');
+
+// Simple positioned model component (no drag & drop)
+const PositionedModel = ({ model, isSelected, onModelSelect }) => {
+  return (
+    <group
+      position={model.position}
+      onClick={(e) => {
+        e.stopPropagation();
+        onModelSelect(model); // Pass the full model object, not just the ID
+      }}
+    >
+      <Model3D
+        url={model.url}
+        position={[0, 0, 0]}
+        scale={model.scale}
+        rotation={model.rotation || [0, 0, 0]}
+        isSelected={isSelected}
+      />
+      
+      {/* Visual indicator when selected */}
+      {isSelected && (
+        <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.3, 0.5, 32]} />
+          <meshBasicMaterial color="#3b82f6" transparent opacity={0.5} />
+        </mesh>
+      )}
+    </group>
+  );
+};
 
 const Room = ({ model }) => {
   const { width, length, height, walls = [], furniture = [], floor = {} } = model;
@@ -308,14 +337,15 @@ const House = ({ model }) => {
 };
 
 const Platform = () => {
-  const platformSize = 15;
+  const platformWidth = 6; // 6 units wide
+  const platformDepth = 5; // 5 units deep  
   const platformHeight = 0.5;
 
   return (
     <group position={[0, 0, 0]}>
       {/* Top surface */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, platformHeight, 0]} receiveShadow castShadow>
-        <planeGeometry args={[platformSize, platformSize]} />
+        <planeGeometry args={[platformWidth, platformDepth]} />
         <meshStandardMaterial 
           map={grassTexture}
           roughness={0.8}
@@ -326,8 +356,8 @@ const Platform = () => {
       {/* Side walls */}
       <group>
         {/* Front */}
-        <mesh position={[0, platformHeight/2, platformSize/2]} castShadow>
-          <boxGeometry args={[platformSize, platformHeight, 0.2]} />
+        <mesh position={[0, platformHeight/2, platformDepth/2]} castShadow>
+          <boxGeometry args={[platformWidth, platformHeight, 0.2]} />
           <meshStandardMaterial 
             map={dirtTexture} 
             roughness={0.9}
@@ -337,8 +367,8 @@ const Platform = () => {
           />
         </mesh>
         {/* Back */}
-        <mesh position={[0, platformHeight/2, -platformSize/2]} castShadow>
-          <boxGeometry args={[platformSize, platformHeight, 0.2]} />
+        <mesh position={[0, platformHeight/2, -platformDepth/2]} castShadow>
+          <boxGeometry args={[platformWidth, platformHeight, 0.2]} />
           <meshStandardMaterial 
             map={dirtTexture} 
             roughness={0.9}
@@ -348,8 +378,8 @@ const Platform = () => {
           />
         </mesh>
         {/* Left */}
-        <mesh position={[-platformSize/2, platformHeight/2, 0]} rotation={[0, Math.PI/2, 0]} castShadow>
-          <boxGeometry args={[platformSize, platformHeight, 0.2]} />
+        <mesh position={[-platformWidth/2, platformHeight/2, 0]} rotation={[0, Math.PI/2, 0]} castShadow>
+          <boxGeometry args={[platformDepth, platformHeight, 0.2]} />
           <meshStandardMaterial 
             map={dirtTexture} 
             roughness={0.9}
@@ -359,8 +389,8 @@ const Platform = () => {
           />
         </mesh>
         {/* Right */}
-        <mesh position={[platformSize/2, platformHeight/2, 0]} rotation={[0, Math.PI/2, 0]} castShadow>
-          <boxGeometry args={[platformSize, platformHeight, 0.2]} />
+        <mesh position={[platformWidth/2, platformHeight/2, 0]} rotation={[0, Math.PI/2, 0]} castShadow>
+          <boxGeometry args={[platformDepth, platformHeight, 0.2]} />
           <meshStandardMaterial 
             map={dirtTexture} 
             roughness={0.9}
@@ -374,7 +404,7 @@ const Platform = () => {
       {/* Grid helper */}
       <Grid
         position={[0, platformHeight + 0.01, 0]}
-        args={[platformSize, platformSize]}
+        args={[platformWidth, platformDepth]}
         cellSize={1}
         cellThickness={0.5}
         cellColor="#6b7280"
@@ -389,38 +419,48 @@ const Platform = () => {
   );
 };
 
-const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate: 0.8 } }) => {
-  const { camera } = useThree();
+const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate: 0.8 }, selectedModel, onModelSelect, onAddModel, placedModels: externalPlacedModels }) => {
+  const { camera, gl } = useThree();
   const [placedModels, setPlacedModels] = useState([]);
+
+  // Handle clicking on empty space to deselect
+  const handleBackgroundClick = (e) => {
+    // Only deselect if clicking directly on the background (not on models)
+    onModelSelect(null);
+  };
 
   useEffect(() => {
     camera.position.set(8, 8, 8);
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
-  // Update existing models' scale when modelScales changes
+  // Sync internal placedModels with external ones
   useEffect(() => {
-    setPlacedModels(prevModels => 
-      prevModels.map(model => {
-        let newScale;
-        if (model.type === 'model') {
-          // Components/furniture - use the furniture scale from props
-          newScale = [modelScales.furniture, modelScales.furniture, modelScales.furniture];
-        } else if (model.type === 'room') {
-          // Room templates - use the room template scale from props
-          newScale = [modelScales.roomTemplate, modelScales.roomTemplate, modelScales.roomTemplate];
-        } else {
-          // Default scale
-          newScale = [modelScales.roomTemplate, modelScales.roomTemplate, modelScales.roomTemplate];
-        }
-        
-        return {
-          ...model,
-          scale: newScale
-        };
-      })
-    );
-  }, [modelScales]);
+    if (externalPlacedModels) {
+      setPlacedModels(externalPlacedModels);
+    }
+  }, [externalPlacedModels]);
+
+  // Update selected model's scale when it changes
+  useEffect(() => {
+    if (selectedModel) {
+      setPlacedModels(prevModels => 
+        prevModels.map(model => 
+          model.id === selectedModel.id ? { ...model, scale: selectedModel.scale } : model
+        )
+      );
+    }
+  }, [selectedModel]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Force garbage collection of WebGL resources
+      if (gl) {
+        gl.dispose();
+      }
+    };
+  }, [gl]);
 
   // Handle new model selection (both 3D models and room templates)
   useEffect(() => {
@@ -453,21 +493,26 @@ const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate
         }
         
         const newModel = {
-          id: Date.now(), // Simple ID for now
+          id: Date.now() + Math.random(), // More unique ID to prevent conflicts
           name: selectedTemplate.name,
           url: modelUrl,
           position: [0, 0.6, 0], // Position on top of the platform (platform height is 0.5)
           scale: modelScale,
+          rotation: [0, 0, 0], // Initial rotation (no rotation)
           type: selectedTemplate.type // Store the type for scale updates
         };
         
-        setPlacedModels(prev => [...prev, newModel]);
+        // Add to external list via callback
+        if (onAddModel) {
+          onAddModel(newModel);
+        }
+        
         console.log('Template added to scene:', newModel);
       } else {
         console.warn('No URL found for template:', selectedTemplate);
       }
     }
-  }, [selectedTemplate, modelScales]);
+  }, [selectedTemplate, modelScales]); // Removed onAddModel from dependencies
 
   return (
     <>
@@ -489,15 +534,26 @@ const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate
         groundColor="#000000"
         intensity={0.5}
       />
+      
+      {/* Invisible background mesh for deselection */}
+      <mesh 
+        position={[0, -0.1, 0]} 
+        rotation={[-Math.PI / 2, 0, 0]}
+        onClick={handleBackgroundClick}
+      >
+        <planeGeometry args={[20, 20]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+      
       <Platform />
       
       {/* Render all placed models (both 3D models and room templates) */}
       {placedModels.map(model => (
-        <Model3D
+        <PositionedModel
           key={model.id}
-          url={model.url}
-          position={model.position}
-          scale={model.scale}
+          model={model}
+          isSelected={selectedModel?.id === model.id}
+          onModelSelect={onModelSelect}
         />
       ))}
       
@@ -519,7 +575,7 @@ const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate
   );
 };
 
-const Canvas = ({ selectedTemplate, modelScales }) => {
+const Canvas = ({ selectedTemplate, modelScales, selectedModel, onModelSelect, onAddModel, placedModels }) => {
   return (
     <div className="design-canvas">
       <ThreeCanvas
@@ -527,7 +583,14 @@ const Canvas = ({ selectedTemplate, modelScales }) => {
         camera={{ position: [8, 8, 8], fov: 50 }}
         gl={{ antialias: true }}
       >
-        <Scene selectedTemplate={selectedTemplate} modelScales={modelScales} />
+        <Scene 
+          selectedTemplate={selectedTemplate} 
+          modelScales={modelScales} 
+          selectedModel={selectedModel}
+          onModelSelect={onModelSelect}
+          onAddModel={onAddModel}
+          placedModels={placedModels}
+        />
       </ThreeCanvas>
     </div>
   );

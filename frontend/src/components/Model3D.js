@@ -3,7 +3,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 // Inner component that uses useGLTF hook properly
-const ModelMesh = ({ url, position, scale }) => {
+const ModelMesh = ({ url, position, scale, rotation, isSelected }) => {
   const meshRef = useRef();
   
   // useGLTF must be called unconditionally at the top level
@@ -14,19 +14,31 @@ const ModelMesh = ({ url, position, scale }) => {
   
   // Ensure materials are properly set up
   clonedScene.traverse((child) => {
-    if (child.isMesh) {
+    if (child.isMesh && child.material) {
       child.castShadow = true;
       child.receiveShadow = true;
       
-      // Fix material if needed
-      if (child.material) {
-        if (Array.isArray(child.material)) {
-          child.material.forEach(material => {
-            material.needsUpdate = true;
-          });
-        } else {
-          child.material.needsUpdate = true;
+      // Handle material properly to avoid uniform errors
+      const handleMaterial = (material) => {
+        if (material) {
+          // Create a new material instance to avoid shared state issues
+          const newMaterial = material.clone();
+          
+          // Safely set emissive property
+          if (newMaterial.emissive !== undefined) {
+            newMaterial.emissive = isSelected ? new THREE.Color(0x444444) : new THREE.Color(0x000000);
+          }
+          
+          newMaterial.needsUpdate = true;
+          return newMaterial;
         }
+        return material;
+      };
+      
+      if (Array.isArray(child.material)) {
+        child.material = child.material.map(handleMaterial);
+      } else {
+        child.material = handleMaterial(child.material);
       }
     }
   });
@@ -37,6 +49,7 @@ const ModelMesh = ({ url, position, scale }) => {
       object={clonedScene}
       position={position}
       scale={scale}
+      rotation={rotation}
     />
   );
 };
@@ -58,11 +71,16 @@ const LoadingFallback = ({ position }) => (
 );
 
 // Main component that handles loading states and errors
-const Model3D = ({ url, position = [0, 0, 0], scale = [1, 1, 1] }) => {
+const Model3D = ({ url, position = [0, 0, 0], scale = [1, 1, 1], rotation = [0, 0, 0], isSelected = false }) => {
   const [error, setError] = useState(false);
   
   if (!url) {
     console.warn('No URL provided for 3D model');
+    return <ErrorFallback position={position} />;
+  }
+  
+  if (error) {
+    console.error('Error loading 3D model:', url);
     return <ErrorFallback position={position} />;
   }
   
@@ -74,7 +92,8 @@ const Model3D = ({ url, position = [0, 0, 0], scale = [1, 1, 1] }) => {
         url={url} 
         position={position} 
         scale={scale}
-        onError={() => setError(true)}
+        rotation={rotation}
+        isSelected={isSelected}
       />
     </Suspense>
   );
