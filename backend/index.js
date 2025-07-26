@@ -79,8 +79,15 @@ app.use((err, req, res, next) => {
     });
   }
   
+  console.error('Error details:', {
+    message: err.message,
+    type: err.name,
+    code: err.code,
+    status: err.status
+  });
   console.error(err.stack);
-  res.status(err.status || 500).json({ 
+  
+  res.status(err.statusCode || 500).json({ 
     status: 'error',
     message: err.message || 'Internal server error'
   });

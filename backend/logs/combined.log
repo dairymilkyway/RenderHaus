@@ -104,3 +104,6 @@
 {"level":"info","message":"User logged in: john@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-26 15:05:22"}
 {"level":"info","message":"User logged in: admin@renderhaus.com","service":"renderhaus-backend","timestamp":"2025-07-26 15:10:19"}
 {"level":"info","message":"User logged in: john@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-26 15:30:25"}
+{"level":"info","message":"User logged in: admin@renderhaus.com","service":"renderhaus-backend","timestamp":"2025-07-26 16:19:26"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-26 16:21:44"}
+{"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-26 16:21:44"}

@@ -1,8 +1,39 @@
+/* Admin Layout Styles for Model Management */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.admin-content {
+  flex: 1;
+  margin-left: 280px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Hide scrollbar for webkit browsers */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scroll-behavior: smooth;
+}
+
+.admin-main::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
 /* Model Management Styles */
 .model-management {
-  padding: 2rem;
-  background-color: #f8fafc;
-  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 4rem);
 }
 
 .model-management-header {
@@ -459,6 +490,61 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .admin-content {
+    margin-left: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .admin-main {
+    padding: 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    /* Hide scrollbar on mobile */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .admin-main::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .model-management {
+    margin: 0;
+    min-height: calc(100vh - 2rem);
+  }
+  
+  .model-management-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .model-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .search-box {
+    max-width: none;
+  }
+  
+  .models-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .modal {
+    width: 95%;
+    margin: 1rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
   .model-management {
     padding: 1rem;
   }
@@ -485,4 +571,29 @@
     width: 95%;
     margin: 1rem;
   }
+}
+
+/* Form note styles */
+.form-note {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Selected file indicator */
+.selected-file {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+}
+
+.selected-file p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
 }

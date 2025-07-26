@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import AdminNavbar from './AdminNavbar';
+import AdminSidebar from './Sidebar';
+import { toast } from 'react-toastify';
 import {
   PlusIcon,
   CloudArrowUpIcon,
@@ -32,6 +35,18 @@ const ModelManagement = () => {
   });
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [editData, setEditData] = useState({
+    name: '',
+    description: '',
+    category: '',
+    style: '',
+    tags: '',
+    materials: '',
+    file: null,
+    roomType: '',
+    subcategory: ''
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Categories for filtering
   const categories = [
@@ -65,6 +80,14 @@ const ModelManagement = () => {
       
       console.log('Models fetch response status:', response.status);
       
+      if (response.status === 401) {
+        toast.error('Your session has expired. Please log in again.');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return;
+      }
+      
       const result = await response.json();
       if (result.status === 'success') {
         // Combine components and room templates into a single array for display
@@ -91,12 +114,12 @@ const ModelManagement = () => {
       const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
       
       if (!allowedTypes.includes(fileExtension)) {
-        alert('Invalid file type. Please select a 3D model file (.gltf, .glb, .obj, .fbx, .dae, .3ds)');
+        toast.error('Invalid file type. Please select a 3D model file (.gltf, .glb, .obj, .fbx, .dae, .3ds)');
         return;
       }
       
       if (file.size > 250 * 1024 * 1024) { // 250MB limit
-        alert('File size must be less than 250MB');
+        toast.error('File size must be less than 250MB');
         return;
       }
       
@@ -109,14 +132,14 @@ const ModelManagement = () => {
     e.preventDefault();
     
     if (!uploadData.file) {
-      alert('Please select a file to upload');
+      toast.error('Please select a file to upload');
       return;
     }
 
     // Check file size (100MB limit for Uploadcare free tier)
     const maxSize = 100 * 1024 * 1024; // 100MB in bytes
     if (uploadData.file.size > maxSize) {
-      alert(`File is too large. Maximum size allowed is 100MB (your file is ${Math.round(uploadData.file.size / (1024 * 1024))}MB). Please try with a smaller file or consider upgrading your Uploadcare plan.`);
+      toast.error(`File is too large. Maximum size allowed is 100MB (your file is ${Math.round(uploadData.file.size / (1024 * 1024))}MB). Please try with a smaller file or consider upgrading your Uploadcare plan.`);
       return;
     }
 
@@ -181,7 +204,7 @@ const ModelManagement = () => {
           try {
             const result = JSON.parse(xhr.responseText);
             if (result.status === 'success') {
-              alert('Model uploaded successfully!');
+              toast.success('Model uploaded successfully!');
               setShowUploadModal(false);
               setUploadData({
                 name: '',
@@ -196,12 +219,12 @@ const ModelManagement = () => {
               });
               fetchModels(); // Refresh the list
             } else {
-              alert(`Upload failed: ${result.message}`);
+              toast.error(`Upload failed: ${result.message}`);
             }
           } catch (parseError) {
             console.error('Response parsing error:', parseError);
             console.error('Raw response:', xhr.responseText);
-            alert('Upload failed: Invalid server response');
+            toast.error('Upload failed: Invalid server response');
           }
         } else {
           console.error('Upload failed with status:', xhr.status);
@@ -209,21 +232,21 @@ const ModelManagement = () => {
           
           // Handle specific error codes
           if (xhr.status === 413) {
-            alert('Upload failed: File is too large. Uploadcare free tier supports files up to 100MB. Please try with a smaller file or consider upgrading your Uploadcare plan.');
+            toast.error('Upload failed: File is too large. Uploadcare free tier supports files up to 100MB. Please try with a smaller file or consider upgrading your Uploadcare plan.');
             return;
           }
           
           if (xhr.status === 408) {
-            alert('Upload failed: Upload timeout. The file may be too large or the connection is slow. Please try with a smaller file.');
+            toast.error('Upload failed: Upload timeout. The file may be too large or the connection is slow. Please try with a smaller file.');
             return;
           }
           
           // Try to parse error message from response
           try {
             const errorResult = JSON.parse(xhr.responseText);
-            alert(`Upload failed: ${errorResult.message || 'Server error'}`);
+            toast.error(`Upload failed: ${errorResult.message || 'Server error'}`);
           } catch (parseError) {
-            alert(`Upload failed: Server returned status ${xhr.status}. Check console for details.`);
+            toast.error(`Upload failed: Server returned status ${xhr.status}. Check console for details.`);
           }
         }
       };
@@ -236,7 +259,7 @@ const ModelManagement = () => {
         console.error('Ready state:', xhr.readyState);
         console.error('Status:', xhr.status);
         console.error('Response text:', xhr.responseText);
-        alert('Upload failed: Network error. Please check if the backend server is running and try again.');
+        toast.error('Upload failed: Network error. Please check if the backend server is running and try again.');
       };
 
       // Handle timeout
@@ -244,7 +267,7 @@ const ModelManagement = () => {
         setIsUploading(false);
         setUploadProgress(0);
         console.error('Upload timeout');
-        alert('Upload failed: Request timed out. Please try with a smaller file or check your connection.');
+        toast.error('Upload failed: Request timed out. Please try with a smaller file or check your connection.');
       };
 
       // Set timeout to 10 minutes for large files
@@ -257,7 +280,116 @@ const ModelManagement = () => {
       setIsUploading(false);
       setUploadProgress(0);
       console.error('Upload error:', error);
-      alert('Upload failed: ' + error.message);
+      toast.error('Upload failed: ' + error.message);
+    }
+  };
+
+  // Handle edit model
+  const handleEditModel = (model) => {
+    setSelectedModel(model);
+    setEditData({
+      name: model.name || '',
+      description: model.description || '',
+      category: model.type === 'room' ? 'room template' : 'components',
+      style: model.style || 'modern',
+      tags: (model.tags || []).join(', '),
+      materials: (model.materials || []).join(', '),
+      file: null,
+      roomType: model.roomType || 'living-room',
+      subcategory: model.subcategory || model.category || 'furniture'
+    });
+    setShowEditModal(true);
+  };
+
+  // Update existing model
+  const handleUpdateModel = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedModel) {
+      toast.error('No model selected for update');
+      return;
+    }
+
+    setIsUpdating(true);
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
+        toast.error('No authentication token found. Please log in again.');
+        return;
+      }
+
+      // Only metadata update (no file upload)
+      const updateUrl = `/api/models/${selectedModel._id}`;
+      
+      const updateData = {
+        name: editData.name,
+        description: editData.description,
+        style: editData.style,
+        tags: editData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        materials: editData.materials.split(',').map(material => material.trim()).filter(material => material)
+      };
+
+      // Add category-specific fields
+      if (editData.category === 'room template') {
+        updateData.roomType = editData.roomType;
+        // For room templates in Model3D, keep the existing category
+        updateData.category = selectedModel.category || 'furniture';
+      } else if (editData.category === 'components') {
+        updateData.subcategory = editData.subcategory;
+        // For components, use the subcategory as the category
+        updateData.category = editData.subcategory;
+      }
+
+      console.log('Updating model with URL:', updateUrl);
+      console.log('Update data:', updateData);
+
+      const response = await fetch(updateUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      console.log('Response status:', response.status);
+      const result = await response.json();
+      console.log('Response data:', result);
+      
+      if (response.status === 401) {
+        toast.error('Your session has expired. Please log in again.');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return;
+      }
+      
+      if (result.status === 'success') {
+        toast.success('Model updated successfully!');
+        setShowEditModal(false);
+        setSelectedModel(null);
+        setEditData({
+          name: '',
+          description: '',
+          category: '',
+          style: '',
+          tags: '',
+          materials: '',
+          file: null,
+          roomType: '',
+          subcategory: ''
+        });
+        fetchModels(); // Refresh the list
+      } else {
+        toast.error(`Update failed: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error('Update failed. Please try again.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -279,14 +411,14 @@ const ModelManagement = () => {
       const result = await response.json();
       
       if (result.status === 'success') {
-        alert('Model deleted successfully!');
+        toast.success('Model deleted successfully!');
         fetchModels(); // Refresh the list
       } else {
-        alert(`Delete failed: ${result.message}`);
+        toast.error(`Delete failed: ${result.message}`);
       }
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Delete failed. Please try again.');
+      toast.error('Delete failed. Please try again.');
     }
   };
 
@@ -298,13 +430,13 @@ const ModelManagement = () => {
       console.log('Connection test response:', response.status);
       
       if (response.ok) {
-        alert('✅ Backend connection successful!');
+        toast.success(' Backend connection successful!');
       } else {
-        alert(`❌ Backend responded with status: ${response.status}`);
+        toast.error(` Backend responded with status: ${response.status}`);
       }
     } catch (error) {
       console.error('Connection test failed:', error);
-      alert('❌ Cannot connect to backend. Make sure the server is running on port 5000.');
+      toast.error(' Cannot connect to backend. Make sure the server is running on port 5000.');
     }
   };
 
@@ -332,14 +464,31 @@ const ModelManagement = () => {
 
   if (loading) {
     return (
-      <div className="model-management">
-        <div className="loading">Loading models...</div>
+      <div className="admin-layout">
+        <AdminSidebar />
+        
+        <div className="admin-content">
+          <AdminNavbar />
+          
+          <div className="admin-main">
+            <div className="model-management">
+              <div className="loading">Loading models...</div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="model-management">
+    <div className="admin-layout">
+      <AdminSidebar />
+      
+      <div className="admin-content">
+        <AdminNavbar />
+        
+        <div className="admin-main">
+          <div className="model-management">
       <div className="model-management-header">
         <h1>3D Model Management</h1>
         <div className="header-buttons">
@@ -438,10 +587,7 @@ const ModelManagement = () => {
                 </button>
                 <button 
                   className="btn-icon"
-                  onClick={() => {
-                    setSelectedModel(model);
-                    setShowEditModal(true);
-                  }}
+                  onClick={() => handleEditModel(model)}
                   title="Edit Model"
                 >
                   <PencilIcon className="icon" />
@@ -636,6 +782,162 @@ const ModelManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Edit Modal */}
+      {showEditModal && selectedModel && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h2>Edit Model Information</h2>
+              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                Update model details. The 3D file will remain unchanged.
+              </p>
+              <button 
+                className="modal-close"
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedModel(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateModel} className="upload-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Model Name *</label>
+                  <input
+                    type="text"
+                    value={editData.name}
+                    onChange={(e) => setEditData({...editData, name: e.target.value})}
+                    placeholder="Enter model name"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Category</label>
+                  <select
+                    value={editData.category}
+                    disabled // Category cannot be changed after creation
+                  >
+                    <option value="room template">Room Templates</option>
+                    <option value="components">Components</option>
+                  </select>
+                  <small className="form-note">Category cannot be changed after creation</small>
+                </div>
+              </div>
+
+              <div className="form-row">
+                {editData.category === 'room template' && (
+                  <div className="form-group">
+                    <label>Room Type</label>
+                    <select
+                      value={editData.roomType}
+                      onChange={(e) => setEditData({...editData, roomType: e.target.value})}
+                    >
+                      {subcategories['room template']?.map(roomType => (
+                        <option key={roomType} value={roomType}>
+                          {roomType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {editData.category === 'components' && (
+                  <div className="form-group">
+                    <label>Component Type</label>
+                    <select
+                      value={editData.subcategory}
+                      onChange={(e) => setEditData({...editData, subcategory: e.target.value})}
+                    >
+                      {subcategories['components']?.map(subcategory => (
+                        <option key={subcategory} value={subcategory}>
+                          {subcategory.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                <div className="form-group">
+                  <label>Style</label>
+                  <select
+                    value={editData.style}
+                    onChange={(e) => setEditData({...editData, style: e.target.value})}
+                  >
+                    {styles.map(style => (
+                      <option key={style} value={style}>{style}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Description *</label>
+                <textarea
+                  value={editData.description}
+                  onChange={(e) => setEditData({...editData, description: e.target.value})}
+                  placeholder="Enter model description"
+                  rows="3"
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Tags (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={editData.tags}
+                    onChange={(e) => setEditData({...editData, tags: e.target.value})}
+                    placeholder="modern, comfortable, living room"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Materials (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={editData.materials}
+                    onChange={(e) => setEditData({...editData, materials: e.target.value})}
+                    placeholder="wood, metal, fabric"
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <div className="action-buttons">
+                  <button 
+                    type="button" 
+                    className="btn-secondary"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setSelectedModel(null);
+                    }}
+                    disabled={isUpdating}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn-primary"
+                    disabled={isUpdating}
+                  >
+                    <PencilIcon className="icon" />
+                    {isUpdating ? 'Updating...' : 'Update Model'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

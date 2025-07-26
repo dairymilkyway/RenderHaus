@@ -237,24 +237,49 @@ const updateModel = async (req, res) => {
     const updates = req.body;
     updates.updatedAt = new Date();
 
-    const model = await Model3D.findByIdAndUpdate(
+    console.log('=== Update Model Request ===');
+    console.log('Model ID:', id);
+    console.log('Updates:', updates);
+
+    // First try to find in Model3D collection (room templates)
+    let model = await Model3D.findByIdAndUpdate(
       id,
       updates,
       { new: true, runValidators: true }
     );
 
+    let collectionType = 'Model3D';
+
+    // If not found in Model3D, try Component collection
     if (!model) {
+      model = await Component.findByIdAndUpdate(
+        id,
+        updates,
+        { new: true, runValidators: true }
+      );
+      collectionType = 'Component';
+    }
+
+    if (!model) {
+      console.log('Model not found in either collection');
       return res.status(404).json({
         status: 'error',
         message: 'Model not found'
       });
     }
 
+    console.log('Model updated successfully in', collectionType, 'collection');
+    console.log('Updated model:', model);
+
     res.json({
       status: 'success',
       data: model
     });
   } catch (error) {
+    console.error('=== Update Model Error ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
     res.status(400).json({
       status: 'error',
       message: error.message
@@ -267,11 +292,21 @@ const deleteModel = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const model = await Model3D.findByIdAndUpdate(
+    // Try to find and update in Model3D first
+    let model = await Model3D.findByIdAndUpdate(
       id,
       { isActive: false },
       { new: true }
     );
+
+    // If not found in Model3D, try Component collection
+    if (!model) {
+      model = await Component.findByIdAndUpdate(
+        id,
+        { isActive: false },
+        { new: true }
+      );
+    }
 
     if (!model) {
       return res.status(404).json({
@@ -453,7 +488,15 @@ const uploadModelFile = async (req, res) => {
 const updateModelFile = async (req, res) => {
   try {
     const { id } = req.params;
-    const model = await Model3D.findById(id);
+    
+    // Try to find in Model3D first, then Component
+    let model = await Model3D.findById(id);
+    let isComponent = false;
+    
+    if (!model) {
+      model = await Component.findById(id);
+      isComponent = true;
+    }
 
     if (!model) {
       return res.status(404).json({
@@ -505,11 +548,10 @@ const updateModelFile = async (req, res) => {
       updateData.compatibility = updateData.compatibility.split(',').map(comp => comp.trim());
     }
 
-    const updatedModel = await Model3D.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    // Update in the correct collection
+    const updatedModel = isComponent 
+      ? await Component.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+      : await Model3D.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 
     res.json({
       status: 'success',
