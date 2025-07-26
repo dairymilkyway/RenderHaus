@@ -38,6 +38,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/models', require('./routes/models'));
 app.use('/api/design', require('./routes/rooms'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 
 // Python backend proxy route
 app.use('/api/python', async (req, res, next) => {

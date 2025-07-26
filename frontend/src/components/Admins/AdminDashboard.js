@@ -1,34 +1,105 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './Sidebar';
 import {
   UserGroupIcon,
   FolderIcon,
   ChartBarIcon,
-  CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   EyeIcon,
   ClockIcon,
+  CubeIcon,
+  HomeIcon,
 } from '@heroicons/react/24/outline';
 import './css/AdminDashboard.css';
 
 const AdminDashboard = () => {
-  const [stats] = useState({
-    totalUsers: 1247,
-    totalProjects: 89,
-    activeProjects: 23,
-    revenue: 15420,
-    userGrowth: 12.5,
-    projectGrowth: -2.3,
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    total3DModels: 0,
+    totalProjects: 0,
+    totalHouseTemplates: 0,
+    userGrowth: 0,
+    projectGrowth: 0,
   });
 
-  const [recentActivity] = useState([
-    { id: 1, action: 'New user registered', user: 'John Doe', time: '2 minutes ago' },
-    { id: 2, action: 'Project completed', user: 'Jane Smith', time: '15 minutes ago' },
-    { id: 3, action: 'New project created', user: 'Mike Johnson', time: '1 hour ago' },
-    { id: 4, action: 'User subscription upgraded', user: 'Sarah Wilson', time: '2 hours ago' },
-  ]);
+  useEffect(() => {
+    fetchDashboardStats();
+    fetchRecentActivity();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token || token === 'null') {
+        console.error('No valid token found in localStorage');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/dashboard/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      } else {
+        const errorData = await response.text();
+        console.error('Failed to fetch dashboard stats:', response.status, errorData);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+  };
+
+  const fetchRecentActivity = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token || token === 'null') {
+        console.error('No valid token found in localStorage');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/dashboard/recent-activity', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setRecentActivity(data);
+      } else {
+        const errorData = await response.text();
+        console.error('Failed to fetch recent activity:', response.status, errorData);
+      }
+    } catch (error) {
+      console.error('Error fetching recent activity:', error);
+    }
+  };
+
+  // Function to get activity icon based on type
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'user':
+        return UserGroupIcon;
+      case 'model':
+        return CubeIcon;
+      case 'template':
+        return HomeIcon;
+      default:
+        return ClockIcon;
+    }
+  };
+
+  const [recentActivity, setRecentActivity] = useState([]);
 
   const [topProjects] = useState([
     { id: 1, name: 'Modern Living Room', views: 2340, status: 'Active' },
@@ -82,23 +153,23 @@ const AdminDashboard = () => {
                   changeType="positive"
                 />
                 <StatCard
+                  title="Total 3D Models"
+                  value={stats.total3DModels.toLocaleString()}
+                  icon={CubeIcon}
+                  change={stats.projectGrowth}
+                  changeType="positive"
+                />
+                <StatCard
                   title="Total Projects"
-                  value={stats.totalProjects}
+                  value={stats.totalProjects.toLocaleString()}
                   icon={FolderIcon}
                   change={stats.projectGrowth}
-                  changeType="negative"
-                />
-                <StatCard
-                  title="Active Projects"
-                  value={stats.activeProjects}
-                  icon={ChartBarIcon}
-                />
-                <StatCard
-                  title="Revenue"
-                  value={`$${stats.revenue.toLocaleString()}`}
-                  icon={CurrencyDollarIcon}
-                  change={8.2}
                   changeType="positive"
+                />
+                <StatCard
+                  title="House Templates"
+                  value={stats.totalHouseTemplates.toLocaleString()}
+                  icon={HomeIcon}
                 />
               </div>
 
@@ -132,18 +203,32 @@ const AdminDashboard = () => {
                   <button className="view-all-btn">View All</button>
                 </div>
                 <div className="activity-list">
-                  {recentActivity.map((activity) => (
-                    <div key={activity.id} className="activity-item">
-                      <div className="activity-info">
-                        <span className="activity-action">{activity.action}</span>
-                        <span className="activity-user">by {activity.user}</span>
-                      </div>
-                      <div className="activity-time">
-                        <ClockIcon className="time-icon" />
-                        <span>{activity.time}</span>
-                      </div>
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity) => {
+                      const ActivityIcon = getActivityIcon(activity.type);
+                      return (
+                        <div key={activity.id} className="activity-item">
+                          <div className="activity-icon">
+                            <ActivityIcon className="icon" />
+                          </div>
+                          <div className="activity-content">
+                            <div className="activity-info">
+                              <span className="activity-action">{activity.action}</span>
+                              <span className="activity-user">by {activity.user}</span>
+                            </div>
+                            <div className="activity-time">
+                              <ClockIcon className="time-icon" />
+                              <span>{activity.time}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="no-activity">
+                      <p>No recent activity found</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 

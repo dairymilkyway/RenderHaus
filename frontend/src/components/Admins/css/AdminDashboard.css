@@ -226,8 +226,8 @@
 
 .activity-item {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
+  gap: 0.75rem;
   padding: 0.75rem;
   border-radius: 8px;
   background-color: #f8fafc;
@@ -236,6 +236,31 @@
 
 .activity-item:hover {
   background-color: #f1f5f9;
+}
+
+.activity-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  background: linear-gradient(to right, #e0f2fe, #bae6fd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.activity-icon .icon {
+  width: 1rem;
+  height: 1rem;
+  color: #0284c7;
+}
+
+.activity-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .activity-info {
@@ -266,6 +291,17 @@
 .time-icon {
   width: 0.875rem;
   height: 0.875rem;
+}
+
+.no-activity {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #64748b;
+}
+
+.no-activity p {
+  margin: 0;
+  font-size: 0.875rem;
 }
 
 /* Projects Section */
@@ -455,4 +491,70 @@
   .stat-value {
     font-size: 1.5rem;
   }
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.loading-spinner {
+  color: #6366f1;
+  font-size: 1.1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-spinner::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Auth Error State */
+.auth-error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #fecaca;
+  background-color: #fef2f2;
+}
+
+.auth-error-message {
+  text-align: center;
+  color: #dc2626;
+}
+
+.auth-error-message h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.auth-error-message p {
+  margin: 0;
+  color: #7f1d1d;
 }
