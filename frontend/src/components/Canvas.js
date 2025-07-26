@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Canvas as ThreeCanvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import * as THREE from 'three';
+import Model3D from './Model3D';
 import './css/Canvas.css';
 
 // Create stable textures outside of component
@@ -388,13 +389,85 @@ const Platform = () => {
   );
 };
 
-const Scene = ({ selectedTemplate }) => {
+const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate: 0.8 } }) => {
   const { camera } = useThree();
+  const [placedModels, setPlacedModels] = useState([]);
 
   useEffect(() => {
     camera.position.set(8, 8, 8);
     camera.lookAt(0, 0, 0);
   }, [camera]);
+
+  // Update existing models' scale when modelScales changes
+  useEffect(() => {
+    setPlacedModels(prevModels => 
+      prevModels.map(model => {
+        let newScale;
+        if (model.type === 'model') {
+          // Components/furniture - use the furniture scale from props
+          newScale = [modelScales.furniture, modelScales.furniture, modelScales.furniture];
+        } else if (model.type === 'room') {
+          // Room templates - use the room template scale from props
+          newScale = [modelScales.roomTemplate, modelScales.roomTemplate, modelScales.roomTemplate];
+        } else {
+          // Default scale
+          newScale = [modelScales.roomTemplate, modelScales.roomTemplate, modelScales.roomTemplate];
+        }
+        
+        return {
+          ...model,
+          scale: newScale
+        };
+      })
+    );
+  }, [modelScales]);
+
+  // Handle new model selection (both 3D models and room templates)
+  useEffect(() => {
+    if (selectedTemplate && (selectedTemplate.type === 'model' || selectedTemplate.type === 'room')) {
+      console.log('Adding template to scene:', selectedTemplate);
+      
+      // Get the model URL from different possible sources
+      let modelUrl = null;
+      
+      if (selectedTemplate.type === 'model') {
+        // For components: check fileUrl or modelFile.url
+        modelUrl = selectedTemplate.fileUrl || selectedTemplate.modelFile?.url;
+      } else if (selectedTemplate.type === 'room') {
+        // For room templates: check modelFile.url first, then fallback to thumbnail
+        modelUrl = selectedTemplate.modelFile?.url || selectedTemplate.thumbnail;
+      }
+      
+      if (modelUrl) {
+        // Apply different scaling based on model type using the passed scales
+        let modelScale;
+        if (selectedTemplate.type === 'model') {
+          // Components/furniture - use the furniture scale from props
+          modelScale = [modelScales.furniture, modelScales.furniture, modelScales.furniture];
+        } else if (selectedTemplate.type === 'room') {
+          // Room templates - use the room template scale from props
+          modelScale = [modelScales.roomTemplate, modelScales.roomTemplate, modelScales.roomTemplate];
+        } else {
+          // Default scale
+          modelScale = [modelScales.roomTemplate, modelScales.roomTemplate, modelScales.roomTemplate];
+        }
+        
+        const newModel = {
+          id: Date.now(), // Simple ID for now
+          name: selectedTemplate.name,
+          url: modelUrl,
+          position: [0, 0.6, 0], // Position on top of the platform (platform height is 0.5)
+          scale: modelScale,
+          type: selectedTemplate.type // Store the type for scale updates
+        };
+        
+        setPlacedModels(prev => [...prev, newModel]);
+        console.log('Template added to scene:', newModel);
+      } else {
+        console.warn('No URL found for template:', selectedTemplate);
+      }
+    }
+  }, [selectedTemplate, modelScales]);
 
   return (
     <>
@@ -417,13 +490,26 @@ const Scene = ({ selectedTemplate }) => {
         intensity={0.5}
       />
       <Platform />
-      {selectedTemplate && selectedTemplate.model && (
+      
+      {/* Render all placed models (both 3D models and room templates) */}
+      {placedModels.map(model => (
+        <Model3D
+          key={model.id}
+          url={model.url}
+          position={model.position}
+          scale={model.scale}
+        />
+      ))}
+      
+      {/* Handle room templates (existing functionality for legacy templates without modelFile) */}
+      {selectedTemplate && selectedTemplate.type === 'room' && !selectedTemplate.modelFile?.url && selectedTemplate.model && (
         selectedTemplate.model.type === 'house' ? (
           <House model={selectedTemplate.model} />
         ) : (
           <Room model={selectedTemplate.model} />
         )
       )}
+      
       <OrbitControls 
         maxPolarAngle={Math.PI / 2.1}
         minDistance={5}
@@ -433,7 +519,7 @@ const Scene = ({ selectedTemplate }) => {
   );
 };
 
-const Canvas = ({ selectedTemplate }) => {
+const Canvas = ({ selectedTemplate, modelScales }) => {
   return (
     <div className="design-canvas">
       <ThreeCanvas
@@ -441,7 +527,7 @@ const Canvas = ({ selectedTemplate }) => {
         camera={{ position: [8, 8, 8], fov: 50 }}
         gl={{ antialias: true }}
       >
-        <Scene selectedTemplate={selectedTemplate} />
+        <Scene selectedTemplate={selectedTemplate} modelScales={modelScales} />
       </ThreeCanvas>
     </div>
   );

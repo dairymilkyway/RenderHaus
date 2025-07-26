@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Unauthorized from './components/Unauthorized';
 import AdminDashboard from './components/Admins/AdminDashboard';
 import UserManagement from './components/Admins/UserManagement';
+import ModelManagement from './components/Admins/ModelManagement';
 import './App.css';
 
 function App() {
@@ -25,7 +26,8 @@ function App() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setUser(null);
     window.location.href = '/';
@@ -77,6 +79,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/models"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ModelManagement />
               </ProtectedRoute>
             }
           />

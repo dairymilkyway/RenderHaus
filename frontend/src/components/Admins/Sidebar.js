@@ -5,6 +5,7 @@ import {
   UserGroupIcon,
   FolderIcon,
   ChartBarIcon,
+  CubeIcon,
 } from '@heroicons/react/24/outline';
 import './css/AdminSidebar.css';
 
@@ -23,6 +24,12 @@ const AdminSidebar = () => {
       name: 'Users',
       icon: UserGroupIcon,
       path: '/admin/users'
+    },
+    {
+      id: 'models',
+      name: '3D Models',
+      icon: CubeIcon,
+      path: '/admin/models'
     },
     {
       id: 'projects',

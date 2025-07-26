@@ -10,8 +10,10 @@
     "dev": "concurrently \"npm run dev:node\" \"npm run dev:python\""
   },
   "dependencies": {
+    "@uploadcare/upload-client": "^6.17.0",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.7.0",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
@@ -19,6 +21,7 @@
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.1.1",
+    "multer": "^2.0.2",
     "winston": "^3.17.0"
   },
   "devDependencies": {

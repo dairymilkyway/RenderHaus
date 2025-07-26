@@ -17,6 +17,10 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [modelScales, setModelScales] = useState({
+    furniture: 0.08,
+    roomTemplate: 0.8
+  });
 
   const refreshToken = useCallback(async () => {
     try {
@@ -141,12 +145,51 @@ const Dashboard = () => {
                   Duplicate
                 </button>
               </div>
+              
+              {/* Size Adjuster Controls */}
+              <div className="size-controls">
+                <div className="size-control-group">
+                  <label>Furniture Size:</label>
+                  <input
+                    type="range"
+                    min="0.01"
+                    max="0.5"
+                    step="0.01"
+                    value={modelScales.furniture}
+                    onChange={(e) => setModelScales({
+                      ...modelScales,
+                      furniture: parseFloat(e.target.value)
+                    })}
+                    className="size-slider"
+                  />
+                  <span className="size-value">{(modelScales.furniture * 100).toFixed(0)}%</span>
+                </div>
+                <div className="size-control-group">
+                  <label>Room Template Size:</label>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="2.0"
+                    step="0.1"
+                    value={modelScales.roomTemplate}
+                    onChange={(e) => setModelScales({
+                      ...modelScales,
+                      roomTemplate: parseFloat(e.target.value)
+                    })}
+                    className="size-slider"
+                  />
+                  <span className="size-value">{(modelScales.roomTemplate * 100).toFixed(0)}%</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Design Canvas Area */}
-        <Canvas selectedTemplate={selectedTemplate} />
+        <Canvas 
+          selectedTemplate={selectedTemplate} 
+          modelScales={modelScales}
+        />
 
         {/* Tutorial Overlay (if shown) */}
         {showTutorial && (
