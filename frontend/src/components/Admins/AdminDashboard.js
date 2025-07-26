@@ -27,6 +27,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchDashboardStats();
     fetchRecentActivity();
+    fetchGrowthAnalytics();
   }, []);
 
   const fetchDashboardStats = async () => {
@@ -85,6 +86,34 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchGrowthAnalytics = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token || token === 'null') {
+        console.error('No valid token found in localStorage');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/dashboard/growth-analytics', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setGrowthAnalytics(data);
+      } else {
+        const errorData = await response.text();
+        console.error('Failed to fetch growth analytics:', response.status, errorData);
+      }
+    } catch (error) {
+      console.error('Error fetching growth analytics:', error);
+    }
+  };
+
   // Function to get activity icon based on type
   const getActivityIcon = (type) => {
     switch (type) {
@@ -100,6 +129,12 @@ const AdminDashboard = () => {
   };
 
   const [recentActivity, setRecentActivity] = useState([]);
+  const [growthAnalytics, setGrowthAnalytics] = useState({
+    userGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
+    modelsGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
+    projectsGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
+    chartData: []
+  });
 
   const [topProjects] = useState([
     { id: 1, name: 'Modern Living Room', views: 2340, status: 'Active' },
@@ -173,24 +208,109 @@ const AdminDashboard = () => {
                 />
               </div>
 
-              {/* Chart Section */}
+              {/* Growth Analytics Section */}
               <div className="bento-item chart-section">
                 <div className="section-header">
-                  <h3>User Growth Analytics</h3>
+                  <h3>Growth Analytics</h3>
                   <button className="view-all-btn">View All</button>
                 </div>
-                <div className="chart-placeholder">
-                  <div className="chart-mockup">
-                    <div className="chart-bars">
-                      <div className="chart-bar" style={{ height: '60%' }}></div>
-                      <div className="chart-bar" style={{ height: '80%' }}></div>
-                      <div className="chart-bar" style={{ height: '45%' }}></div>
-                      <div className="chart-bar" style={{ height: '90%' }}></div>
-                      <div className="chart-bar" style={{ height: '75%' }}></div>
-                      <div className="chart-bar" style={{ height: '95%' }}></div>
+                <div className="analytics-content">
+                  {/* Growth Cards */}
+                  <div className="growth-cards">
+                    <div className="growth-card">
+                      <div className="growth-header">
+                        <span className="growth-label">Users</span>
+                        <div className={`growth-trend ${growthAnalytics.userGrowth.trend}`}>
+                          {growthAnalytics.userGrowth.trend === 'up' ? (
+                            <ArrowTrendingUpIcon className="trend-icon" />
+                          ) : (
+                            <ArrowTrendingDownIcon className="trend-icon" />
+                          )}
+                          <span>{Math.abs(growthAnalytics.userGrowth.percentage)}%</span>
+                        </div>
+                      </div>
+                      <div className="growth-numbers">
+                        <span className="current-number">{growthAnalytics.userGrowth.current}</span>
+                        <span className="previous-number">vs {growthAnalytics.userGrowth.previous} last month</span>
+                      </div>
                     </div>
-                    <div className="chart-info">
-                      <span>+{stats.userGrowth}% this month</span>
+
+                    <div className="growth-card">
+                      <div className="growth-header">
+                        <span className="growth-label">3D Models</span>
+                        <div className={`growth-trend ${growthAnalytics.modelsGrowth.trend}`}>
+                          {growthAnalytics.modelsGrowth.trend === 'up' ? (
+                            <ArrowTrendingUpIcon className="trend-icon" />
+                          ) : (
+                            <ArrowTrendingDownIcon className="trend-icon" />
+                          )}
+                          <span>{Math.abs(growthAnalytics.modelsGrowth.percentage)}%</span>
+                        </div>
+                      </div>
+                      <div className="growth-numbers">
+                        <span className="current-number">{growthAnalytics.modelsGrowth.current}</span>
+                        <span className="previous-number">vs {growthAnalytics.modelsGrowth.previous} last month</span>
+                      </div>
+                    </div>
+
+                    <div className="growth-card">
+                      <div className="growth-header">
+                        <span className="growth-label">Projects</span>
+                        <div className={`growth-trend ${growthAnalytics.projectsGrowth.trend}`}>
+                          {growthAnalytics.projectsGrowth.trend === 'up' ? (
+                            <ArrowTrendingUpIcon className="trend-icon" />
+                          ) : (
+                            <ArrowTrendingDownIcon className="trend-icon" />
+                          )}
+                          <span>{Math.abs(growthAnalytics.projectsGrowth.percentage)}%</span>
+                        </div>
+                      </div>
+                      <div className="growth-numbers">
+                        <span className="current-number">{growthAnalytics.projectsGrowth.current}</span>
+                        <span className="previous-number">vs {growthAnalytics.projectsGrowth.previous} last month</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mini Chart */}
+                  <div className="mini-chart">
+                    <div className="chart-bars">
+                      {growthAnalytics.chartData.map((day, index) => (
+                        <div key={day.date} className="chart-day">
+                          <div className="chart-bar-group">
+                            <div 
+                              className="chart-bar users" 
+                              style={{ height: `${Math.max(20, (day.users / Math.max(...growthAnalytics.chartData.map(d => d.users), 1)) * 100)}%` }}
+                              title={`${day.users} users`}
+                            ></div>
+                            <div 
+                              className="chart-bar models" 
+                              style={{ height: `${Math.max(20, (day.models / Math.max(...growthAnalytics.chartData.map(d => d.models), 1)) * 100)}%` }}
+                              title={`${day.models} models`}
+                            ></div>
+                            <div 
+                              className="chart-bar projects" 
+                              style={{ height: `${Math.max(20, (day.projects / Math.max(...growthAnalytics.chartData.map(d => d.projects), 1)) * 100)}%` }}
+                              title={`${day.projects} projects`}
+                            ></div>
+                          </div>
+                          <span className="chart-label">{new Date(day.date).getDate()}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="chart-legend">
+                      <div className="legend-item">
+                        <div className="legend-color users"></div>
+                        <span>Users</span>
+                      </div>
+                      <div className="legend-item">
+                        <div className="legend-color models"></div>
+                        <span>Models</span>
+                      </div>
+                      <div className="legend-item">
+                        <div className="legend-color projects"></div>
+                        <span>Projects</span>
+                      </div>
                     </div>
                   </div>
                 </div>
