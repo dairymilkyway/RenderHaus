@@ -57,7 +57,8 @@ const UserManagement = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user'
+    role: 'user',
+    gender: 'other'
   });
 
   // Form validation
@@ -149,6 +150,11 @@ const UserManagement = () => {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addUserForm.email)) {
       errors.email = 'Invalid email format';
     }
+
+    // Gender validation
+    if (!addUserForm.gender) {
+      errors.gender = 'Gender is required';
+    }
     
     // Password validation
     if (!addUserForm.password) {
@@ -201,7 +207,8 @@ const UserManagement = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'user'
+        role: 'user',
+        gender: 'other'
       });
       setFormErrors({});
       fetchUsers(currentPage);
@@ -218,7 +225,8 @@ const UserManagement = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'user'
+      role: 'user',
+      gender: 'other'
     });
     setFormErrors({});
   };
@@ -265,7 +273,7 @@ const UserManagement = () => {
     }
   };
 
-  // Delete user
+  // Archive user
   const deleteUser = async () => {
     if (!hasReadDeleteNotice) {
       toast.error('Please read and acknowledge the notice before proceeding.');
@@ -285,12 +293,76 @@ const UserManagement = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete user');
+        throw new Error(data.message || 'Failed to archive user');
       }
 
-      toast.success('User deleted successfully!');
+      toast.success('User archived successfully!');
       setShowDeleteModal(false);
       setHasReadDeleteNotice(false);
+      fetchUsers(currentPage);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Restore archived user
+  const restoreUser = async (user) => {
+    if (!window.confirm(`Are you sure you want to restore ${user.name}? They will regain access to their account.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5000/api/users/${user._id}/restore`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to restore user');
+      }
+
+      toast.success('User restored successfully!');
+      fetchUsers(currentPage);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Permanently delete user
+  const permanentlyDeleteUser = async (user) => {
+    if (!window.confirm(`⚠️ PERMANENT DELETION WARNING ⚠️\n\nThis will PERMANENTLY delete ${user.name} and ALL their data. This action cannot be undone.\n\nType "DELETE" to confirm.`)) {
+      return;
+    }
+
+    const confirmation = window.prompt('Type "DELETE" to confirm permanent deletion:');
+    if (confirmation !== 'DELETE') {
+      toast.error('Permanent deletion cancelled - confirmation text did not match.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`http://localhost:5000/api/users/${user._id}/permanent`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to permanently delete user');
+      }
+
+      toast.success('User permanently deleted!');
       fetchUsers(currentPage);
     } catch (err) {
       toast.error(err.message);
@@ -341,8 +413,17 @@ const UserManagement = () => {
   };
 
   // Get status badge
-  const getStatusBadge = (isActive) => {
-    return isActive ? (
+  const getStatusBadge = (user) => {
+    if (user.deletedAt) {
+      return (
+        <span className="status-badge archived">
+          <XCircleIcon className="status-icon" />
+          Archived
+        </span>
+      );
+    }
+    
+    return user.isActive ? (
       <span className="status-badge active">
         <CheckCircleIcon className="status-icon" />
         Active
@@ -449,9 +530,11 @@ const UserManagement = () => {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="filter-select"
                 >
-                  <option value="">All Status</option>
+                  <option value="">All Status (Active + Inactive)</option>
+                  <option value="all">All Users (Including Archived)</option>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
+                  <option value="archived">Archived</option>
                 </select>
 
                 <button onClick={clearFilters} className="btn-secondary">
@@ -499,35 +582,58 @@ const UserManagement = () => {
                           </div>
                         </td>
                         <td>{getRoleBadge(user.role)}</td>
-                        <td>{getStatusBadge(user.isActive !== false)}</td>
+                        <td>{getStatusBadge(user)}</td>
                         <td>{formatDate(user.createdAt)}</td>
                         <td>
                           <div className="action-buttons">
-                            <button
-                              onClick={() => openEditModal(user)}
-                              className="btn-icon-only edit"
-                              title="Edit User"
-                            >
-                              <PencilIcon className="action-icon" />
-                            </button>
-                            <button
-                              onClick={() => handleToggleUserStatus(user)}
-                              className={`btn-icon-only ${user.isActive !== false ? 'deactivate' : 'activate'}`}
-                              title={user.isActive !== false ? 'Deactivate User' : 'Activate User'}
-                            >
-                              {user.isActive !== false ? (
-                                <XCircleIcon className="action-icon" />
-                              ) : (
-                                <CheckCircleIcon className="action-icon" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(user)}
-                              className="btn-icon-only delete"
-                              title="Delete User"
-                            >
-                              <TrashIcon className="action-icon" />
-                            </button>
+                            {user.deletedAt ? (
+                              // Archived user actions
+                              <>
+                                <button
+                                  onClick={() => restoreUser(user)}
+                                  className="btn-icon-only restore"
+                                  title="Restore User"
+                                >
+                                  <CheckCircleIcon className="action-icon" />
+                                </button>
+                                <button
+                                  onClick={() => permanentlyDeleteUser(user)}
+                                  className="btn-icon-only permanent-delete"
+                                  title="Permanently Delete User"
+                                >
+                                  <TrashIcon className="action-icon" />
+                                </button>
+                              </>
+                            ) : (
+                              // Active/Inactive user actions
+                              <>
+                                <button
+                                  onClick={() => openEditModal(user)}
+                                  className="btn-icon-only edit"
+                                  title="Edit User"
+                                >
+                                  <PencilIcon className="action-icon" />
+                                </button>
+                                <button
+                                  onClick={() => handleToggleUserStatus(user)}
+                                  className={`btn-icon-only ${user.isActive !== false ? 'deactivate' : 'activate'}`}
+                                  title={user.isActive !== false ? 'Deactivate User' : 'Activate User'}
+                                >
+                                  {user.isActive !== false ? (
+                                    <XCircleIcon className="action-icon" />
+                                  ) : (
+                                    <CheckCircleIcon className="action-icon" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => openDeleteModal(user)}
+                                  className="btn-icon-only delete"
+                                  title="Archive User"
+                                >
+                                  <TrashIcon className="action-icon" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -692,6 +798,27 @@ const UserManagement = () => {
               </div>
 
               <div className="form-group">
+                <label htmlFor="add-gender">Gender *</label>
+                <select
+                  id="add-gender"
+                  value={addUserForm.gender}
+                  onChange={(e) => {
+                    setAddUserForm({...addUserForm, gender: e.target.value});
+                    if (formErrors.gender) {
+                      setFormErrors({...formErrors, gender: ''});
+                    }
+                  }}
+                  className={`form-select ${formErrors.gender ? 'error' : ''}`}
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+                {formErrors.gender && <span className="error-text">{formErrors.gender}</span>}
+              </div>
+
+              <div className="form-group">
                 <label htmlFor="add-password">Password *</label>
                 <input
                   id="add-password"
@@ -764,12 +891,12 @@ const UserManagement = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal modal-danger">
             <div className="modal-header">
-              <h3>Delete User Account</h3>
+              <h3>Archive User Account</h3>
               <button
                 onClick={() => {
                   setShowDeleteModal(false);
@@ -783,10 +910,10 @@ const UserManagement = () => {
             <div className="modal-body">
               <div className="danger-content">
                 <ExclamationTriangleIcon className="danger-icon" />
-                <h4>⚠️ CRITICAL WARNING - PERMANENT ACTION</h4>
+                <h4>⚠️ ARCHIVE USER ACCOUNT</h4>
                 
                 <div className="notice-section">
-                  <p><strong>You are about to permanently delete the user account for:</strong></p>
+                  <p><strong>You are about to archive the user account for:</strong></p>
                   <div className="user-details">
                     <p><strong>Name:</strong> {selectedUser?.name}</p>
                     <p><strong>Email:</strong> {selectedUser?.email}</p>
@@ -794,19 +921,18 @@ const UserManagement = () => {
                   </div>
                   
                   <div className="warning-text">
-                    <h5>🚨 IMPORTANT CONSEQUENCES:</h5>
+                    <h5>� ARCHIVING CONSEQUENCES:</h5>
                     <ul>
-                      <li><strong>IRREVERSIBLE ACTION:</strong> This deletion cannot be undone. All user data will be permanently removed from the system.</li>
-                      <li><strong>DATA LOSS:</strong> All projects, saved work, preferences, and user-generated content associated with this account will be permanently deleted.</li>
-                      <li><strong>ACCESS TERMINATION:</strong> The user will immediately lose access to their account and all associated services.</li>
-                      <li><strong>AUDIT TRAIL:</strong> User activities and history will be removed, which may affect reporting and compliance.</li>
-                      <li><strong>SYSTEM REFERENCES:</strong> Any system references to this user may become invalid and could affect related functionalities.</li>
-                      <li><strong>LEGAL IMPLICATIONS:</strong> Ensure you have proper authorization and have followed your organization's data retention policies.</li>
+                      <li><strong>ACCOUNT DEACTIVATION:</strong> The user will immediately lose access to their account and all associated services.</li>
+                      <li><strong>DATA PRESERVATION:</strong> All user data, projects, and content will be preserved but hidden from normal operations.</li>
+                      <li><strong>REVERSIBLE ACTION:</strong> This account can be restored later if needed using the restore function.</li>
+                      <li><strong>VISIBILITY:</strong> The user will be hidden from normal user lists but visible in archived user view.</li>
+                      <li><strong>EMAIL REUSE:</strong> If someone registers with the same email, the archived account will be restored.</li>
                     </ul>
                   </div>
                   
                   <div className="alternative-notice">
-                    <p><strong>💡 RECOMMENDED ALTERNATIVE:</strong> Consider deactivating the user instead of deleting. Deactivation preserves data while preventing access, and can be reversed if needed.</p>
+                    <p><strong>💡 NOTE:</strong> This is a reversible action. The user can be restored from the archived users section if needed.</p>
                   </div>
                   
                   <div className="confirmation-checkbox">
@@ -818,7 +944,7 @@ const UserManagement = () => {
                         className="confirmation-checkbox-input"
                       />
                       <span className="checkmark"></span>
-                      I have read and understand the consequences of this action. I confirm that I have proper authorization to delete this user account and understand this action is irreversible.
+                      I understand that this will archive the user account and they will lose access immediately.
                     </label>
                   </div>
                 </div>
@@ -839,7 +965,7 @@ const UserManagement = () => {
                 disabled={!hasReadDeleteNotice}
                 className={`btn-danger ${!hasReadDeleteNotice ? 'disabled' : ''}`}
               >
-                {hasReadDeleteNotice ? 'Permanently Delete User' : 'Please Read Notice First'}
+                {hasReadDeleteNotice ? 'Archive User' : 'Please Read Notice First'}
               </button>
             </div>
           </div>
