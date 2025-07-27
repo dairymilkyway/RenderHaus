@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   BellIcon,
   Cog6ToothIcon,
@@ -9,7 +8,6 @@ import {
 import './css/AdminNavbar.css';
 
 const AdminNavbar = () => {
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -35,10 +33,29 @@ const AdminNavbar = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    navigate('/auth');
+    // Confirm logout
+    if (window.confirm('Are you sure you want to logout?')) {
+      try {
+        // Clear all authentication data
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        
+        // Clear user state
+        setUser(null);
+        
+        // Dispatch a custom event to notify App.js about logout
+        window.dispatchEvent(new Event('userLogout'));
+        
+        // Use window.location.href for reliable redirect (consistent with Login component)
+        window.location.href = '/auth';
+        
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Force hard redirect as fallback
+        window.location.href = '/auth';
+      }
+    }
   };
 
   const toggleDropdown = () => {

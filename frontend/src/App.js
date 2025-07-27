@@ -36,15 +36,21 @@ function App() {
       }
     };
 
+    const handleLogout = () => {
+      setUser(null);
+    };
+
     // Listen for storage events
     window.addEventListener('storage', handleStorageChange);
     
-    // Also listen for custom events we'll dispatch on login
+    // Also listen for custom events we'll dispatch on login/logout
     window.addEventListener('userLogin', handleStorageChange);
+    window.addEventListener('userLogout', handleLogout);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('userLogin', handleStorageChange);
+      window.removeEventListener('userLogout', handleLogout);
     };
   }, []);
 
