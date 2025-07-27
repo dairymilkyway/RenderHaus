@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Unauthorized from './components/Unauthorized';
 import AdminDashboard from './components/Admins/AdminDashboard';
 import UserManagement from './components/Admins/UserManagement';
+import ProjectManagement from './components/Admins/ProjectManagement';
 import ModelManagement from './components/Admins/ModelManagement';
 import ReportManagement from './components/Admins/ReportManagement';
 import './App.css';
@@ -97,6 +98,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/projects"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ProjectManagement />
               </ProtectedRoute>
             }
           />

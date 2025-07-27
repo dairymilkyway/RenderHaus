@@ -41,6 +41,9 @@ app.use('/api/design', require('./routes/rooms'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/projects', require('./routes/projects'));
 
+// Admin routes
+app.use('/api/admin/projects', require('./routes/admin/projects'));
+
 // Python backend proxy route
 app.use('/api/python', async (req, res, next) => {
   try {
