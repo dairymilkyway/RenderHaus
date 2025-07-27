@@ -26,6 +26,7 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [verificationFilter, setVerificationFilter] = useState('');
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,7 +49,9 @@ const UserManagement = () => {
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
-    role: 'user'
+    role: 'user',
+    gender: 'other',
+    isEmailVerified: false
   });
 
   // Add user form
@@ -76,6 +79,7 @@ const UserManagement = () => {
         search: searchTerm,
         role: roleFilter,
         status: statusFilter,
+        verification: verificationFilter,
         sortBy: 'createdAt',
         sortOrder: 'desc'
       });
@@ -379,6 +383,7 @@ const UserManagement = () => {
     setSearchTerm('');
     setRoleFilter('');
     setStatusFilter('');
+    setVerificationFilter('');
     setCurrentPage(1);
     fetchUsers(1);
   };
@@ -389,7 +394,9 @@ const UserManagement = () => {
     setEditForm({
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      gender: user.gender,
+      isEmailVerified: user.isEmailVerified
     });
     setShowEditModal(true);
   };
@@ -495,6 +502,12 @@ const UserManagement = () => {
                     {users.filter(u => u.role === 'admin').length}
                   </span>
                 </div>
+                <div className="stat-card">
+                  <span className="stat-label">Verified Users</span>
+                  <span className="stat-value">
+                    {users.filter(u => u.isEmailVerified).length}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -537,6 +550,16 @@ const UserManagement = () => {
                   <option value="archived">Archived</option>
                 </select>
 
+                <select
+                  value={verificationFilter}
+                  onChange={(e) => setVerificationFilter(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">All Verification Status</option>
+                  <option value="verified">Verified</option>
+                  <option value="unverified">Unverified</option>
+                </select>
+
                 <button onClick={clearFilters} className="btn-secondary">
                   <FunnelIcon className="btn-icon" />
                   Clear Filters
@@ -563,6 +586,7 @@ const UserManagement = () => {
                       <th>User</th>
                       <th>Role</th>
                       <th>Status</th>
+                      <th>Email Verified</th>
                       <th>Created</th>
                       <th>Actions</th>
                     </tr>
@@ -583,6 +607,21 @@ const UserManagement = () => {
                         </td>
                         <td>{getRoleBadge(user.role)}</td>
                         <td>{getStatusBadge(user)}</td>
+                        <td>
+                          <span className={`email-verification-badge ${user.isEmailVerified ? 'verified' : 'unverified'}`}>
+                            {user.isEmailVerified ? (
+                              <>
+                                <CheckCircleIcon className="verification-icon" />
+                                Verified
+                              </>
+                            ) : (
+                              <>
+                                <XCircleIcon className="verification-icon" />
+                                Unverified
+                              </>
+                            )}
+                          </span>
+                        </td>
                         <td>{formatDate(user.createdAt)}</td>
                         <td>
                           <div className="action-buttons">
@@ -714,6 +753,19 @@ const UserManagement = () => {
                 />
               </div>
               <div className="form-group">
+                <label htmlFor="edit-gender">Gender</label>
+                <select
+                  id="edit-gender"
+                  value={editForm.gender}
+                  onChange={(e) => setEditForm({...editForm, gender: e.target.value})}
+                  className="form-select"
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label htmlFor="edit-role">Role</label>
                 <select
                   id="edit-role"
@@ -724,6 +776,21 @@ const UserManagement = () => {
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
                 </select>
+              </div>
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={editForm.isEmailVerified}
+                    onChange={(e) => setEditForm({...editForm, isEmailVerified: e.target.checked})}
+                    className="form-checkbox"
+                  />
+                  <span className="checkmark"></span>
+                  Email Verified
+                </label>
+                <small className="form-help">
+                  Check this to mark the user's email as verified. This will allow them full access to the platform.
+                </small>
               </div>
             </div>
             <div className="modal-footer">
