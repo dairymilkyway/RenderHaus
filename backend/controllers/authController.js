@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const logger = require('../utils/logger');
 const { AuthenticationError, NotFoundError } = require('../utils/errors');
+const { generateOTP, hashOTP, verifyOTP } = require('../utils/otpUtils');
+const { sendEmail } = require('../config/mailer');
 
 // Generate tokens
 const generateTokens = (userId, role) => {
@@ -24,7 +26,7 @@ const generateTokens = (userId, role) => {
 // Register new user
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, gender } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -32,32 +34,45 @@ exports.register = async (req, res, next) => {
       throw new AuthenticationError('User already exists');
     }
 
+    // Generate OTP
+    const otp = generateOTP();
+    const hashedOTP = hashOTP(otp);
+    const otpExpiry = new Date(Date.now() + config.email.otpExpiry);
+
     // Create new user
     const user = new User({
       name,
       email,
-      password
+      password,
+      gender,
+      emailVerificationOTP: hashedOTP,
+      emailVerificationExpires: otpExpiry
     });
 
     await user.save();
     logger.info(`New user registered: ${user.email}`);
 
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id, user.role);
+    // Send verification email
+    const emailResult = await sendEmail(email, 'verificationOTP', name, otp);
+    
+    if (!emailResult.success) {
+      logger.error(`Failed to send verification email to ${email}: ${emailResult.error}`);
+      // Don't throw error here, user is created but email failed
+    }
 
     res.status(201).json({
       status: 'success',
+      message: 'Registration successful. Please check your email for verification code.',
       data: {
         user: {
           id: user._id,
           name: user.name,
           email: user.email,
-          role: user.role
+          role: user.role,
+          gender: user.gender,
+          isEmailVerified: user.isEmailVerified
         },
-        tokens: {
-          accessToken,
-          refreshToken
-        }
+        emailSent: emailResult.success
       }
     });
   } catch (error) {
@@ -82,6 +97,11 @@ exports.login = async (req, res, next) => {
       throw new AuthenticationError('Invalid credentials');
     }
 
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      throw new AuthenticationError('Please verify your email before logging in. Check your inbox for the verification code.');
+    }
+
     logger.info(`User logged in: ${user.email}`);
 
     // Generate tokens
@@ -94,7 +114,9 @@ exports.login = async (req, res, next) => {
           id: user._id,
           name: user.name,
           email: user.email,
-          role: user.role
+          role: user.role,
+          gender: user.gender,
+          isEmailVerified: user.isEmailVerified
         },
         tokens: {
           accessToken,
@@ -155,6 +177,125 @@ exports.getProfile = async (req, res, next) => {
       status: 'success',
       data: {
         user
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Verify email with OTP
+exports.verifyEmail = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Check if already verified
+    if (user.isEmailVerified) {
+      return res.json({
+        status: 'success',
+        message: 'Email is already verified'
+      });
+    }
+
+    // Check if OTP exists and is not expired
+    if (!user.emailVerificationOTP || !user.emailVerificationExpires) {
+      throw new AuthenticationError('No verification code found. Please request a new one.');
+    }
+
+    if (user.emailVerificationExpires < new Date()) {
+      throw new AuthenticationError('Verification code has expired. Please request a new one.');
+    }
+
+    // Verify OTP
+    const isValidOTP = verifyOTP(otp, user.emailVerificationOTP);
+    if (!isValidOTP) {
+      throw new AuthenticationError('Invalid verification code');
+    }
+
+    // Update user as verified
+    user.isEmailVerified = true;
+    user.emailVerificationOTP = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    logger.info(`Email verified for user: ${user.email}`);
+
+    // Generate tokens for immediate login
+    const { accessToken, refreshToken } = generateTokens(user._id, user.role);
+
+    res.json({
+      status: 'success',
+      message: 'Email verified successfully! You can now login.',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          gender: user.gender,
+          isEmailVerified: user.isEmailVerified
+        },
+        tokens: {
+          accessToken,
+          refreshToken
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Resend verification OTP
+exports.resendVerificationOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Check if already verified
+    if (user.isEmailVerified) {
+      return res.json({
+        status: 'success',
+        message: 'Email is already verified'
+      });
+    }
+
+    // Generate new OTP
+    const otp = generateOTP();
+    const hashedOTP = hashOTP(otp);
+    const otpExpiry = new Date(Date.now() + config.email.otpExpiry);
+
+    // Update user with new OTP
+    user.emailVerificationOTP = hashedOTP;
+    user.emailVerificationExpires = otpExpiry;
+    await user.save();
+
+    // Send verification email
+    const emailResult = await sendEmail(email, 'verificationOTP', user.name, otp);
+    
+    if (!emailResult.success) {
+      logger.error(`Failed to resend verification email to ${email}: ${emailResult.error}`);
+      throw new Error('Failed to send verification email. Please try again.');
+    }
+
+    logger.info(`Verification OTP resent to: ${user.email}`);
+
+    res.json({
+      status: 'success',
+      message: 'Verification code sent to your email',
+      data: {
+        emailSent: true
       }
     });
   } catch (error) {

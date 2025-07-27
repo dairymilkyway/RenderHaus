@@ -566,6 +566,70 @@ const updateModelFile = async (req, res) => {
   }
 };
 
+// Get model statistics
+const getModelStats = async (req, res) => {
+  try {
+    const totalModels = await Model3D.countDocuments();
+    const activeModels = await Model3D.countDocuments({ isActive: true });
+    const inactiveModels = await Model3D.countDocuments({ isActive: false });
+    
+    // Get models by category
+    const modelsByCategory = await Model3D.aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Get models by style
+    const modelsByStyle = await Model3D.aggregate([
+      { $group: { _id: '$style', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Get monthly upload trend
+    const monthlyUploads = await Model3D.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1 } },
+      { $limit: 12 }
+    ]);
+
+    // Get recent uploads (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentUploads = await Model3D.countDocuments({
+      createdAt: { $gte: thirtyDaysAgo }
+    });
+
+    res.json({
+      status: 'success',
+      data: {
+        overview: {
+          totalModels,
+          activeModels,
+          inactiveModels,
+          recentUploads
+        },
+        categoryDistribution: modelsByCategory,
+        styleDistribution: modelsByStyle,
+        monthlyTrend: monthlyUploads.reverse()
+      }
+    });
+  } catch (error) {
+    console.error('Error getting model statistics:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to retrieve model statistics'
+    });
+  }
+};
+
 module.exports = {
   getModels,
   getModelById,
@@ -576,5 +640,6 @@ module.exports = {
   deleteModel,
   uploadModelFile,
   updateModelFile,
+  getModelStats,
   upload // Export multer middleware
 };
