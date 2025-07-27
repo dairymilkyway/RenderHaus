@@ -293,6 +293,13 @@
   color: #374151;
 }
 
+/* Actions column should not wrap */
+.users-table td:last-child {
+  white-space: nowrap;
+  width: 1%;
+  padding: 1rem 0.75rem;
+}
+
 .users-table tbody tr:hover {
   background: #f8fafc;
 }
@@ -388,7 +395,12 @@
 /* Action Buttons */
 .action-buttons {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  white-space: nowrap;
+  min-width: fit-content;
 }
 
 .btn-icon-only {
@@ -748,6 +760,19 @@
     padding: 0.75rem;
   }
   
+  /* Ensure action buttons stay horizontal on mobile */
+  .action-buttons {
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+  
+  .btn-icon-only {
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
+  }
+
   .modal {
     width: 95%;
     margin: 1rem;
