@@ -47,16 +47,16 @@ const Sidebar = ({ activeSection, onSectionChange }) => {
           <CameraIcon className="tool-icon" />
           <span>View</span>
         </button>
+        <button 
+          className={`tool-button ${activeSection === 'ai-suggestions' ? 'active' : ''}`}
+          onClick={() => handleSectionClick('ai-suggestions')}
+        >
+          <SparklesIcon className="tool-icon" />
+          <span>AI Suggestions</span>
+        </button>
       </div>
 
       <div className="tool-section">
-        <button 
-          className={`tool-button ai-button ${activeSection === 'ai-suggest' ? 'active' : ''}`}
-          onClick={() => handleSectionClick('ai-suggest')}
-        >
-          <SparklesIcon className="tool-icon" />
-          <span>AI Suggest</span>
-        </button>
         <button 
           className={`tool-button ai-button ${activeSection === 'ai-explain' ? 'active' : ''}`}
           onClick={() => handleSectionClick('ai-explain')}

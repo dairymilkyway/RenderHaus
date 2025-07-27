@@ -423,6 +423,8 @@ const Dashboard = () => {
       <Properties 
         activeSection={activeSection} 
         onTemplateSelect={handleTemplateSelect}
+        placedModels={placedModels}
+        onModelSelect={handleModelSelect}
       />
     </div>
   );

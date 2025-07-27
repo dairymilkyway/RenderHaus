@@ -43,16 +43,24 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 // Python backend proxy route
 app.use('/api/python', async (req, res, next) => {
   try {
-    const pythonUrl = `http://localhost:${process.env.PYTHON_PORT || 5001}${req.url}`;
+    // Remove '/api/python' prefix from the URL for the Python backend
+    const pythonPath = req.url; // This already has the path after /api/python
+    const pythonUrl = `http://localhost:${process.env.PYTHON_PORT || 5001}/api/python${pythonPath}`;
     const response = await axios({
       method: req.method,
       url: pythonUrl,
       data: req.body,
-      headers: req.headers
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     res.status(response.status).json(response.data);
   } catch (error) {
-    next(error);
+    console.error('Python backend proxy error:', error.message);
+    res.status(500).json({
+      status: 'error',
+      message: 'Python backend connection failed'
+    });
   }
 });
 

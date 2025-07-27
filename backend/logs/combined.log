@@ -139,3 +139,5 @@
 {"level":"info","message":"Admin 687f001daa40695f49801561 retrieved users list","service":"renderhaus-backend","timestamp":"2025-07-26 17:58:40"}
 {"level":"info","message":"User logged in: admin@renderhaus.com","service":"renderhaus-backend","timestamp":"2025-07-26 18:06:29"}
 {"level":"info","message":"User logged in: admin@renderhaus.com","service":"renderhaus-backend","timestamp":"2025-07-26 18:10:41"}
+{"level":"info","message":"User logged in: john@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-26 20:04:36"}
+{"level":"info","message":"User logged in: john@gmail.com","service":"renderhaus-backend","timestamp":"2025-07-26 20:05:42"}

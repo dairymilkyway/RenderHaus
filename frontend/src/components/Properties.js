@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 // import ComponentsSection from './Functions/ComponentsSection';
 // import MaterialsSection from './Functions/MaterialsSection';
 // import ViewSection from './Functions/ViewSection';
-// import AISuggestSection from './Functions/AISuggestSection';
+import AISuggestSection from './Functions/AISuggestSection';
 // import AIExplainSection from './Functions/AIExplainSection';
 // import SaveExportSection from './Functions/SaveExportSection';
 import './css/Properties.css';
@@ -222,7 +222,7 @@ const InlineTemplatesSection = ({ onTemplateSelect }) => {
   );
 };
 
-const Properties = ({ activeSection, onTemplateSelect }) => {
+const Properties = ({ activeSection, onTemplateSelect, placedModels, onModelSelect }) => {
   const renderSection = () => {
     switch (activeSection) {
       case 'templates':
@@ -233,8 +233,8 @@ const Properties = ({ activeSection, onTemplateSelect }) => {
         return <div className="properties-panel"><h3>Materials</h3><p>Material selection coming soon...</p></div>;
       case 'view':
         return <div className="properties-panel"><h3>View</h3><p>View options coming soon...</p></div>;
-      case 'ai-suggest':
-        return <div className="properties-panel"><h3>AI Suggest</h3><p>AI suggestions coming soon...</p></div>;
+      case 'ai-suggestions':
+        return <AISuggestSection placedModels={placedModels} onModelSelect={onModelSelect} />;
       case 'ai-explain':
         return <div className="properties-panel"><h3>AI Explain</h3><p>AI explanations coming soon...</p></div>;
       case 'save-export':
