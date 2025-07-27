@@ -3,15 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import {
   DocumentDuplicateIcon,
   ArrowPathIcon,
+  FolderIcon,
+  DocumentPlusIcon
 } from '@heroicons/react/24/outline';
 import Sidebar from './Sidebar';
 import Properties from './Properties';
 import Canvas from './Canvas';
+import ProjectManager from './ProjectManager';
 import './css/Dashboard.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [activeProject] = useState('Living Room Design');
+  const [activeProject, setActiveProject] = useState('New Canvas');
   const [showTutorial, setShowTutorial] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,6 +27,10 @@ const Dashboard = () => {
     furniture: 0.08,
     roomTemplate: 0.8
   });
+  
+  // Project management state
+  const [showProjectManager, setShowProjectManager] = useState(false);
+  const [currentProject, setCurrentProject] = useState(null);
 
   const refreshToken = useCallback(async () => {
     try {
@@ -123,6 +130,10 @@ const Dashboard = () => {
   }, []);
 
   const handleModelSelect = useCallback((model) => {
+    console.log('Dashboard - handleModelSelect received:', model);
+    if (model) {
+      console.log('Dashboard - Model has _id:', !!model._id, model._id);
+    }
     if (!model) {
       setSelectedModel(null);
       return;
@@ -131,15 +142,37 @@ const Dashboard = () => {
     // Ensure the model has all required properties with defaults
     const modelWithDefaults = {
       ...model,
+      // Map the correct URL field for the Canvas component
+      url: model.url || model.fileUrl || (model.modelFile && model.modelFile.url),
       position: model.position || [0, 0.6, 0],
       scale: model.scale || [0.1, 0.1, 0.1],
       rotation: model.rotation || [0, 0, 0]
     };
+    console.log('Dashboard - modelWithDefaults:', modelWithDefaults);
     setSelectedModel(modelWithDefaults);
   }, []);
 
   const handleAddModel = useCallback((model) => {
-    setPlacedModels(prev => [...prev, model]);
+    console.log('Dashboard - handleAddModel called with:', model);
+    if (model) {
+      console.log('Dashboard - Model _id before processing:', model._id);
+    }
+    
+    // Ensure model has required database fields
+    const modelWithId = {
+      ...model,
+      id: model.id || Date.now() + Math.random(), // Local instance ID
+      _id: model._id, // Database ID (should come from ModelLibrary)
+      // Map the correct URL field for the Canvas component
+      url: model.url || model.fileUrl || (model.modelFile && model.modelFile.url),
+      position: model.position || [0, 0.6, 0],
+      scale: model.scale || [0.1, 0.1, 0.1],
+      rotation: model.rotation || [0, 0, 0]
+    };
+    
+    console.log('Dashboard - Adding model to placedModels:', modelWithId);
+    console.log('Dashboard - Final model _id:', modelWithId._id);
+    setPlacedModels(prev => [...prev, modelWithId]);
     // Clear the selected template to prevent continuous adding
     setSelectedTemplate(null);
   }, []);
@@ -202,6 +235,24 @@ const Dashboard = () => {
     setSelectedModel(prev => ({ ...prev, position: newPosition }));
   }, [selectedModel]);
 
+  // Project management functions
+  const handleLoadProject = useCallback((project, loadedPlacedModels) => {
+    setCurrentProject(project);
+    setActiveProject(project.name);
+    setPlacedModels(loadedPlacedModels);
+    setSelectedModel(null);
+    console.log('Project loaded:', project.name, 'with', loadedPlacedModels.length, 'models');
+  }, []);
+
+  const handleNewProject = useCallback(() => {
+    setCurrentProject(null);
+    setActiveProject('New Canvas');
+    setPlacedModels([]);
+    setSelectedModel(null);
+    setShowProjectManager(false);
+    console.log('New project created');
+  }, []);
+
   if (loading) {
     return <div className="dashboard-loading">Loading...</div>;
   }
@@ -219,6 +270,23 @@ const Dashboard = () => {
             <h1>{activeProject}</h1>
             <div className="topbar-actions">
               <div className="project-actions">
+                <button 
+                  className="action-button"
+                  onClick={() => setShowProjectManager(true)}
+                  title="Manage Projects"
+                >
+                  <FolderIcon className="action-icon" />
+                  Projects
+                </button>
+                <button 
+                  className="action-button"
+                  onClick={() => setShowProjectManager(true)}
+                  disabled={placedModels.length === 0}
+                  title="Save Canvas"
+                >
+                  <DocumentPlusIcon className="action-icon" />
+                  Save
+                </button>
                 <button className="action-button">
                   <ArrowPathIcon className="action-icon" />
                   Auto-Save On
@@ -392,13 +460,13 @@ const Dashboard = () => {
                     </div>
                     <div className="model-properties">
                       <span className="model-scale">
-                        Scale: {(model.scale[0] * 100).toFixed(0)}%
+                        Scale: {(((model.scale && model.scale[0]) || 0.1) * 100).toFixed(0)}%
                       </span>
                       <span className="model-rotation">
-                        Rotation: {model.rotation ? Math.round((model.rotation[1] * 180) / Math.PI) : 0}°
+                        Rotation: {model.rotation && model.rotation[1] ? Math.round((model.rotation[1] * 180) / Math.PI) : 0}°
                       </span>
                       <span className="model-position">
-                        Pos: ({model.position[0].toFixed(1)}, {model.position[2].toFixed(1)})
+                        Pos: ({((model.position && model.position[0]) || 0).toFixed(1)}, {((model.position && model.position[2]) || 0).toFixed(1)})
                       </span>
                     </div>
                   </div>
@@ -426,6 +494,19 @@ const Dashboard = () => {
         placedModels={placedModels}
         onModelSelect={handleModelSelect}
       />
+
+      {/* Project Manager Modal */}
+      {showProjectManager && (
+        <ProjectManager
+          user={user}
+          onLoadProject={handleLoadProject}
+          onNewProject={handleNewProject}
+          currentProject={currentProject}
+          placedModels={placedModels}
+          isVisible={showProjectManager}
+          onClose={() => setShowProjectManager(false)}
+        />
+      )}
     </div>
   );
 };

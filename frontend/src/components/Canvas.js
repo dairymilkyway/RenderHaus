@@ -493,13 +493,15 @@ const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate
         }
         
         const newModel = {
-          id: Date.now() + Math.random(), // More unique ID to prevent conflicts
+          ...selectedTemplate, // Preserve all original properties including _id
+          id: Date.now() + Math.random(), // More unique ID to prevent conflicts (local instance ID)
           name: selectedTemplate.name,
           url: modelUrl,
           position: [0, 0.6, 0], // Position on top of the platform (platform height is 0.5)
           scale: modelScale,
           rotation: [0, 0, 0], // Initial rotation (no rotation)
-          type: selectedTemplate.type // Store the type for scale updates
+          type: selectedTemplate.type, // Store the type for scale updates
+          category: selectedTemplate.category // Preserve category
         };
         
         // Add to external list via callback

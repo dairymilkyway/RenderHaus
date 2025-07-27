@@ -62,14 +62,17 @@ const Login = ({ onSwitchToRegister, onShowEmailVerification }) => {
       localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.data.user));
 
+      // Dispatch custom event to update App state
+      window.dispatchEvent(new Event('userLogin'));
+
       // Show success notification
       toast.success('Login successful! Welcome back!', {
         onClose: () => {
-          // Redirect based on role after notification
+          // Force page refresh to ensure user state is updated
           if (data.data.user.role === 'admin') {
-            navigate('/admin/dashboard');
+            window.location.href = '/admin/dashboard';
           } else {
-            navigate('/dashboard');
+            window.location.href = '/dashboard';
           }
         }
       });

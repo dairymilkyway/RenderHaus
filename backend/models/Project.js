@@ -34,10 +34,17 @@ const projectSchema = new mongoose.Schema({
   },
   // Objects placed in the scene
   objects: [{
-    model3DId: {
+    // Dynamic reference that can point to either Model3D or Component
+    modelId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Model3D',
-      required: true
+      required: true,
+      refPath: 'objects.modelType'
+    },
+    // Indicates which collection this model comes from
+    modelType: {
+      type: String,
+      required: true,
+      enum: ['Model3D', 'Component']
     },
     position: {
       x: { type: Number, required: true },

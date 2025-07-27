@@ -52,8 +52,19 @@ const ModelLibrary = ({ onModelSelect }) => {
       const data = await response.json();
       
       if (data.status === 'success') {
-        setModels(data.data.models);
-        setPagination(data.data.pagination);
+        // Combine components and roomTemplates into a single models array
+        const combinedModels = [
+          ...(data.data.components || []),
+          ...(data.data.roomTemplates || [])
+        ];
+        console.log('ModelLibrary - Combined models:', combinedModels);
+        console.log('ModelLibrary - First model _id:', combinedModels[0]?._id);
+        setModels(combinedModels);
+        setPagination(data.data.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: combinedModels.length
+        });
       }
     } catch (error) {
       console.error('Error fetching models:', error);
@@ -71,6 +82,8 @@ const ModelLibrary = ({ onModelSelect }) => {
   };
 
   const handleModelSelect = (model) => {
+    console.log('ModelLibrary - Selected model:', model);
+    console.log('ModelLibrary - Model has _id:', !!model._id);
     if (onModelSelect) {
       onModelSelect(model);
     }

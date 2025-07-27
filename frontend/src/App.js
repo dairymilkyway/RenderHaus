@@ -24,6 +24,29 @@ function App() {
     }
   }, []);
 
+  // Listen for storage changes to update user state when login happens
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        setUser(null);
+      }
+    };
+
+    // Listen for storage events
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events we'll dispatch on login
+    window.addEventListener('userLogin', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userLogin', handleStorageChange);
+    };
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');

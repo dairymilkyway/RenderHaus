@@ -39,13 +39,16 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/models', require('./routes/models'));
 app.use('/api/design', require('./routes/rooms'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/projects', require('./routes/projects'));
 
 // Python backend proxy route
 app.use('/api/python', async (req, res, next) => {
   try {
-    // Remove '/api/python' prefix from the URL for the Python backend
-    const pythonPath = req.url; // This already has the path after /api/python
-    const pythonUrl = `http://localhost:${process.env.PYTHON_PORT || 5001}/api/python${pythonPath}`;
+    // Keep the full path including /api/python prefix
+    const pythonUrl = `http://localhost:${process.env.PYTHON_PORT || 5001}${req.originalUrl}`;
+    
+    console.log(`Proxying to Python backend: ${pythonUrl}`);
+    
     const response = await axios({
       method: req.method,
       url: pythonUrl,
