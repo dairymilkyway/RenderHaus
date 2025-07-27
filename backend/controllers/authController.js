@@ -28,10 +28,54 @@ exports.register = async (req, res, next) => {
   try {
     const { name, email, password, gender } = req.body;
 
-    // Check if user already exists
+    // Check if user already exists (including soft-deleted users)
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    if (existingUser && !existingUser.deletedAt) {
       throw new AuthenticationError('User already exists');
+    }
+    
+    // If a soft-deleted user exists, restore it instead of creating new
+    if (existingUser && existingUser.deletedAt) {
+      // Generate OTP
+      const otp = generateOTP();
+      const hashedOTP = hashOTP(otp);
+      const otpExpiry = new Date(Date.now() + config.email.otpExpiry);
+
+      // Restore the soft-deleted user
+      existingUser.name = name;
+      existingUser.password = password; // This will trigger the pre-save hash
+      existingUser.gender = gender;
+      existingUser.isActive = true;
+      existingUser.deletedAt = null;
+      existingUser.isEmailVerified = false;
+      existingUser.emailVerificationOTP = hashedOTP;
+      existingUser.emailVerificationExpires = otpExpiry;
+
+      await existingUser.save();
+      logger.info(`Restored soft-deleted user during registration: ${existingUser.email}`);
+
+      // Send verification email
+      const emailResult = await sendEmail(email, 'verificationOTP', name, otp);
+      
+      if (!emailResult.success) {
+        logger.error(`Failed to send verification email to ${email}: ${emailResult.error}`);
+      }
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Registration successful. Please check your email for verification code.',
+        data: {
+          user: {
+            id: existingUser._id,
+            name: existingUser.name,
+            email: existingUser.email,
+            role: existingUser.role,
+            gender: existingUser.gender,
+            isEmailVerified: existingUser.isEmailVerified
+          },
+          emailSent: emailResult.success
+        }
+      });
     }
 
     // Generate OTP
@@ -85,8 +129,8 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by email and ensure they are not soft-deleted
+    const user = await User.findOne({ email, deletedAt: null });
     if (!user) {
       throw new AuthenticationError('Invalid credentials');
     }
@@ -141,8 +185,8 @@ exports.refreshToken = async (req, res, next) => {
     // Verify refresh token
     const decoded = jwt.verify(refreshToken, config.jwt.secret);
     
-    // Check if user still exists
-    const user = await User.findById(decoded.userId);
+    // Check if user still exists and is not soft-deleted
+    const user = await User.findOne({ _id: decoded.userId, deletedAt: null });
     if (!user) {
       throw new AuthenticationError('User no longer exists');
     }
@@ -168,7 +212,7 @@ exports.refreshToken = async (req, res, next) => {
 // Get user profile
 exports.getProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
+    const user = await User.findOne({ _id: req.user.userId, deletedAt: null }).select('-password');
     if (!user) {
       throw new NotFoundError('User not found');
     }
@@ -189,8 +233,8 @@ exports.verifyEmail = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by email and ensure they are not soft-deleted
+    const user = await User.findOne({ email, deletedAt: null });
     if (!user) {
       throw new NotFoundError('User not found');
     }
@@ -257,8 +301,8 @@ exports.resendVerificationOTP = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by email and ensure they are not soft-deleted
+    const user = await User.findOne({ email, deletedAt: null });
     if (!user) {
       throw new NotFoundError('User not found');
     }

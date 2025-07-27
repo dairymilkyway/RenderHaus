@@ -358,6 +358,11 @@
   color: #dc2626;
 }
 
+.status-badge.archived {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
 .status-icon {
   width: 0.875rem;
   height: 0.875rem;
@@ -436,6 +441,26 @@
 .btn-icon-only.delete:hover {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+.btn-icon-only.restore {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.btn-icon-only.restore:hover {
+  background: #bbf7d0;
+  color: #15803d;
+}
+
+.btn-icon-only.permanent-delete {
+  background: #450a0a;
+  color: #fef2f2;
+}
+
+.btn-icon-only.permanent-delete:hover {
+  background: #7f1d1d;
+  color: #fecaca;
 }
 
 .action-icon {
