@@ -13,14 +13,28 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024, // 100MB limit for Uploadcare free tier
   },
   fileFilter: (req, file, cb) => {
-    // Accept common 3D model formats
-    const allowedTypes = ['.gltf', '.glb', '.obj', '.fbx', '.dae', '.3ds'];
-    const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
-    
-    if (allowedTypes.includes(fileExtension)) {
-      cb(null, true);
+    if (file.fieldname === 'modelFile') {
+      // Accept common 3D model formats
+      const allowedTypes = ['.gltf', '.glb', '.obj', '.fbx', '.dae', '.3ds'];
+      const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+      
+      if (allowedTypes.includes(fileExtension)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only 3D model files are allowed.'), false);
+      }
+    } else if (file.fieldname === 'thumbnailFile') {
+      // Accept image formats for thumbnails
+      const allowedTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+      const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+      
+      if (allowedTypes.includes(fileExtension)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid thumbnail file type. Only image files are allowed.'), false);
+      }
     } else {
-      cb(new Error('Invalid file type. Only 3D model files are allowed.'), false);
+      cb(new Error('Unknown field name.'), false);
     }
   }
 });
@@ -331,22 +345,33 @@ const deleteModel = async (req, res) => {
 const uploadModelFile = async (req, res) => {
   try {
     console.log('=== Upload Model File Request ===');
-    console.log('Request file:', req.file ? 'File present' : 'No file');
+    console.log('Request files:', req.files);
     console.log('Request body:', req.body);
     
-    if (!req.file) {
-      console.log('Error: No file uploaded');
+    if (!req.files || !req.files.modelFile) {
+      console.log('Error: No model file uploaded');
       return res.status(400).json({
         status: 'error',
-        message: 'No file uploaded'
+        message: 'No model file uploaded'
       });
     }
 
-    console.log('File details:', {
-      originalname: req.file.originalname,
-      size: req.file.size,
-      mimetype: req.file.mimetype
+    const modelFile = req.files.modelFile[0];
+    const thumbnailFile = req.files.thumbnailFile ? req.files.thumbnailFile[0] : null;
+
+    console.log('Model file details:', {
+      originalname: modelFile.originalname,
+      size: modelFile.size,
+      mimetype: modelFile.mimetype
     });
+
+    if (thumbnailFile) {
+      console.log('Thumbnail file details:', {
+        originalname: thumbnailFile.originalname,
+        size: thumbnailFile.size,
+        mimetype: thumbnailFile.mimetype
+      });
+    }
 
     const {
       name,
@@ -361,12 +386,12 @@ const uploadModelFile = async (req, res) => {
       subcategory // For components
     } = req.body;
 
-    console.log('Starting Uploadcare upload...');
+    console.log('Starting Uploadcare upload for model file...');
     
-    // Upload file to Uploadcare
+    // Upload model file to Uploadcare
     const uploadResult = await uploadModel(
-      req.file.buffer,
-      req.file.originalname,
+      modelFile.buffer,
+      modelFile.originalname,
       {
         metadata: {
           category: category || 'components',
@@ -380,13 +405,33 @@ const uploadModelFile = async (req, res) => {
       fileId: uploadResult.fileId
     });
 
+    // Upload thumbnail file if provided
+    let thumbnailUploadResult = null;
+    if (thumbnailFile) {
+      console.log('Starting Uploadcare upload for thumbnail...');
+      thumbnailUploadResult = await uploadModel(
+        thumbnailFile.buffer,
+        thumbnailFile.originalname,
+        {
+          metadata: {
+            type: 'thumbnail',
+            category: category || 'components'
+          }
+        }
+      );
+      console.log('Thumbnail upload successful:', {
+        cdnUrl: thumbnailUploadResult.cdnUrl,
+        fileId: thumbnailUploadResult.fileId
+      });
+    }
+
     console.log('Creating database record...');
     
     // Check category and save to appropriate collection
     if (category === 'room template') {
       // Save to Model3D collection (room templates now go to Model3D)
       const newModel = new Model3D({
-        name: name || req.file.originalname.split('.')[0],
+        name: name || modelFile.originalname.split('.')[0],
         description: description || '',
         category: 'furniture', // Default category for Model3D schema compatibility
         subcategory: 'furniture', // Keep subcategory for Model3D schema compatibility
@@ -395,20 +440,22 @@ const uploadModelFile = async (req, res) => {
         // For legacy compatibility, set both modelFile.url and fileUrl
         modelFile: {
           url: uploadResult.cdnUrl,
-          format: req.file.originalname.split('.').pop().toLowerCase(),
-          size: req.file.size
+          format: modelFile.originalname.split('.').pop().toLowerCase(),
+          size: modelFile.size
         },
         fileUrl: uploadResult.cdnUrl,
         uploadcareId: uploadResult.fileId,
-        fileName: req.file.originalname,
-        fileSize: req.file.size,
-        fileFormat: req.file.originalname.split('.').pop().toLowerCase(),
+        fileName: modelFile.originalname,
+        fileSize: modelFile.size,
+        fileFormat: modelFile.originalname.split('.').pop().toLowerCase(),
         dimensions: dimensions ? JSON.parse(dimensions) : { width: 1, height: 1, depth: 1 },
         materials: materials ? materials.split(',').map(material => material.trim()) : [],
         compatibility: compatibility ? compatibility.split(',').map(comp => comp.trim()) : ['web', 'mobile'],
         isActive: true,
         // Add room type for room templates
-        roomType: roomType || 'living-room'
+        roomType: roomType || 'living-room',
+        // Add thumbnail URL if provided
+        thumbnail: thumbnailUploadResult ? thumbnailUploadResult.cdnUrl : null
       });
 
       const savedModel = await newModel.save();
@@ -424,7 +471,7 @@ const uploadModelFile = async (req, res) => {
     } else {
       // Save to Component collection (components now go to Component)
       const newComponent = new Component({
-        name: name || req.file.originalname.split('.')[0],
+        name: name || modelFile.originalname.split('.')[0],
         description: description || '',
         category: subcategory || 'furniture', // Use the selected subcategory
         subcategory: subcategory || 'furniture', // Keep subcategory for Component schema compatibility
@@ -433,18 +480,20 @@ const uploadModelFile = async (req, res) => {
         // For legacy compatibility, set both modelFile.url and fileUrl
         modelFile: {
           url: uploadResult.cdnUrl,
-          format: req.file.originalname.split('.').pop().toLowerCase(),
-          size: req.file.size
+          format: modelFile.originalname.split('.').pop().toLowerCase(),
+          size: modelFile.size
         },
         fileUrl: uploadResult.cdnUrl,
         uploadcareId: uploadResult.fileId,
-        fileName: req.file.originalname,
-        fileSize: req.file.size,
-        fileFormat: req.file.originalname.split('.').pop().toLowerCase(),
+        fileName: modelFile.originalname,
+        fileSize: modelFile.size,
+        fileFormat: modelFile.originalname.split('.').pop().toLowerCase(),
         dimensions: dimensions ? JSON.parse(dimensions) : { width: 1, height: 1, depth: 1 },
         materials: materials ? materials.split(',').map(material => material.trim()) : [],
         compatibility: compatibility ? compatibility.split(',').map(comp => comp.trim()) : ['web', 'mobile'],
-        isActive: true
+        isActive: true,
+        // Add thumbnail URL if provided
+        thumbnail: thumbnailUploadResult ? thumbnailUploadResult.cdnUrl : null
       });
 
       const savedComponent = await newComponent.save();

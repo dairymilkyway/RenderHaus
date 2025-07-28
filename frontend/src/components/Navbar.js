@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { Link } from 'react-scroll';
 import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   HomeIcon,
-  UserGroupIcon,
   ChartBarIcon,
-  BuildingOfficeIcon,
-  EnvelopeIcon,
   ChevronDownIcon,
   Cog6ToothIcon
 } from '@heroicons/react/24/outline';
@@ -67,29 +63,12 @@ const Navbar = ({ user, onLogout }) => {
       <div className="nav-content">
         <RouterLink to="/" className="nav-logo">
           <HomeIcon className="nav-icon" />
-          NaviBuild
+          RenderHaus
         </RouterLink>
         
         <div className="nav-links">
           {!user ? (
             <>
-              <Link 
-                to="features" 
-                smooth={true} 
-                duration={500} 
-                className="nav-link"
-              >
-                <UserGroupIcon className="nav-icon" />
-                Features
-              </Link>
-              <NavLink to="/about">
-                <BuildingOfficeIcon className="nav-icon" />
-                About
-              </NavLink>
-              <NavLink to="/contact">
-                <EnvelopeIcon className="nav-icon" />
-                Contact
-              </NavLink>
               <RouterLink to="/auth" className="nav-button">
                 <UserCircleIcon className="nav-icon" />
                 Sign In
@@ -132,14 +111,6 @@ const Navbar = ({ user, onLogout }) => {
                       <span className="dropdown-user-name">{user.name || 'User'}</span>
                       <span className="dropdown-user-email">{user.email}</span>
                     </div>
-                    <NavLink to="/profile" className="dropdown-item">
-                      <UserCircleIcon className="nav-icon" />
-                      Profile Settings
-                    </NavLink>
-                    <NavLink to="/settings" className="dropdown-item">
-                      <Cog6ToothIcon className="nav-icon" />
-                      Account Settings
-                    </NavLink>
                     <div className="dropdown-divider" />
                     <button 
                       className="dropdown-item text-red" 

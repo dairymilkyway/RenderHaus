@@ -3,7 +3,6 @@ import { useLocation, Link } from 'react-router-dom';
 import {
   HomeIcon,
   UserGroupIcon,
-  FolderIcon,
   ChartBarIcon,
   CubeIcon,
 } from '@heroicons/react/24/outline';
@@ -30,12 +29,6 @@ const AdminSidebar = () => {
       name: '3D Models',
       icon: CubeIcon,
       path: '/admin/models'
-    },
-    {
-      id: 'projects',
-      name: 'Projects',
-      icon: FolderIcon,
-      path: '/admin/projects'
     },
     {
       id: 'reports',

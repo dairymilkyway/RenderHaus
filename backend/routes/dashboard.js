@@ -69,10 +69,20 @@ router.get('/stats/projects', auth, async (req, res) => {
 
     const totalProjects = await Project.countDocuments();
     
-    // Projects by type
-    const projectsByType = await Project.aggregate([
-      { $group: { _id: '$type', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
+    // 3D Components usage in projects (count objects in each project)
+    const projectsWithComponents = await Project.aggregate([
+      {
+        $project: {
+          totalComponents: { $size: { $ifNull: ['$objects', []] } }
+        }
+      },
+      {
+        $group: {
+          _id: '$totalComponents',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
     ]);
 
     // Monthly project creation trend
@@ -97,6 +107,11 @@ router.get('/stats/projects', auth, async (req, res) => {
       createdAt: { $gte: thirtyDaysAgo }
     });
 
+    console.log('📊 Project Stats Debug:');
+    console.log('- Total Projects:', totalProjects);
+    console.log('- Components Usage Data:', projectsWithComponents);
+    console.log('- Recent Projects:', recentProjects);
+
     res.json({
       status: 'success',
       data: {
@@ -104,7 +119,7 @@ router.get('/stats/projects', auth, async (req, res) => {
           totalProjects,
           recentProjects
         },
-        typeDistribution: projectsByType,
+        componentsUsage: projectsWithComponents,
         monthlyTrend: monthlyProjects.reverse()
       }
     });
@@ -187,16 +202,54 @@ router.get('/stats/models', auth, async (req, res) => {
     const totalModels = totalModel3D + totalComponents;
     const activeModels = await Model3D.countDocuments({ isActive: true });
 
-    // Models by category
-    const modelsByCategory = await Model3D.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
+    // Most used room templates (Model3Ds) from projects
+    const roomTemplateUsage = await Project.aggregate([
+      { $unwind: '$objects' },
+      { $match: { 'objects.modelType': 'Model3D' } },
+      {
+        $lookup: {
+          from: 'model3ds',
+          localField: 'objects.modelId',
+          foreignField: '_id',
+          as: 'modelData'
+        }
+      },
+      { $unwind: '$modelData' },
+      {
+        $group: {
+          _id: '$modelData.name',
+          count: { $sum: 1 },
+          category: { $first: '$modelData.category' },
+          modelId: { $first: '$modelData._id' }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
     ]);
 
-    // Components by category (if applicable)
-    const componentsByCategory = await Component.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
+    // Most used components from projects
+    const componentUsage = await Project.aggregate([
+      { $unwind: '$objects' },
+      { $match: { 'objects.modelType': 'Component' } },
+      {
+        $lookup: {
+          from: 'components',
+          localField: 'objects.modelId',
+          foreignField: '_id',
+          as: 'componentData'
+        }
+      },
+      { $unwind: '$componentData' },
+      {
+        $group: {
+          _id: '$componentData.name',
+          count: { $sum: 1 },
+          category: { $first: '$componentData.category' },
+          modelId: { $first: '$componentData._id' }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
     ]);
 
     // Monthly model upload trend
@@ -238,6 +291,11 @@ router.get('/stats/models', auth, async (req, res) => {
       createdAt: { $gte: thirtyDaysAgo }
     });
 
+    console.log('📊 Room Template Usage:', roomTemplateUsage);
+    console.log('📊 Component Usage:', componentUsage);
+    console.log('📊 Model3D Count:', totalModel3D);
+    console.log('📊 Components Count:', totalComponents);
+
     res.json({
       status: 'success',
       data: {
@@ -248,8 +306,8 @@ router.get('/stats/models', auth, async (req, res) => {
           activeModels,
           recentUploads: recentModel3D + recentComponents
         },
-        model3DCategoryDistribution: modelsByCategory,
-        componentCategoryDistribution: componentsByCategory,
+        roomTemplateUsage: roomTemplateUsage,
+        componentUsage: componentUsage,
         monthlyModel3DTrend: monthlyModel3D.reverse(),
         monthlyComponentTrend: monthlyComponents.reverse()
       }
@@ -283,36 +341,58 @@ router.get('/stats', auth, async (req, res) => {
     const totalModel3D = await Model3D.countDocuments();
     const total3DModels = totalComponents + totalModel3D;
 
-    // Get total projects (assuming projects are user-created models/components)
-    // This might need adjustment based on your actual project model structure
-    const totalProjects = await Component.countDocuments({ createdBy: { $exists: true } });
-
-    // Get total house templates
-    const totalHouseTemplates = await HouseTemplate.countDocuments();
+    // Get total projects from Project collection (user-created projects)
+    const totalProjects = await Project.countDocuments();
 
     console.log('📊 Database counts:');
     console.log('- Total Users (non-admin):', totalUsers);
     console.log('- Total Components:', totalComponents);
     console.log('- Total Model3D:', totalModel3D);
     console.log('- Total 3D Models:', total3DModels);
-    console.log('- Total Projects:', totalProjects);
-    console.log('- Total House Templates:', totalHouseTemplates);
+    console.log('- Total User Projects:', totalProjects);
 
-    // Calculate growth percentages (simplified version)
-    // In a real application, you'd compare with previous periods
-    const userGrowth = Math.floor(Math.random() * 15) + 5; // 5-20% growth
-    const projectGrowth = Math.floor(Math.random() * 10) + 2; // 2-12% growth
+    // Calculate real growth percentages by comparing last 30 days vs previous 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    // User growth calculation
+    const currentMonthUsers = await User.countDocuments({
+      role: { $ne: 'admin' },
+      createdAt: { $gte: thirtyDaysAgo }
+    });
+    const previousMonthUsers = await User.countDocuments({
+      role: { $ne: 'admin' },
+      createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }
+    });
+    const userGrowth = previousMonthUsers === 0 ? 
+      (currentMonthUsers > 0 ? 100 : 0) : 
+      Math.round(((currentMonthUsers - previousMonthUsers) / previousMonthUsers) * 100);
+
+    // Project growth calculation
+    const currentMonthProjects = await Project.countDocuments({
+      createdAt: { $gte: thirtyDaysAgo }
+    });
+    const previousMonthProjects = await Project.countDocuments({
+      createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }
+    });
+    const projectGrowth = previousMonthProjects === 0 ? 
+      (currentMonthProjects > 0 ? 100 : 0) : 
+      Math.round(((currentMonthProjects - previousMonthProjects) / previousMonthProjects) * 100);
 
     const responseData = {
       totalUsers,
       total3DModels,
       totalProjects,
-      totalHouseTemplates,
       userGrowth,
       projectGrowth
     };
 
-    console.log('🚀 Sending response:', responseData);
+    console.log('� Growth calculations:');
+    console.log('- User Growth:', userGrowth + '%', `(${currentMonthUsers} vs ${previousMonthUsers})`);
+    console.log('- Project Growth:', projectGrowth + '%', `(${currentMonthProjects} vs ${previousMonthProjects})`);
+    console.log('�🚀 Sending response:', responseData);
     res.json(responseData);
 
   } catch (error) {
@@ -351,31 +431,70 @@ router.get('/recent-activity', auth, async (req, res) => {
     // Get recent components/models created
     const recentComponents = await Component.find()
       .sort({ createdAt: -1 })
-      .limit(5)
+      .limit(3)
       .select('name createdAt');
 
     recentComponents.forEach(component => {
       activities.push({
         id: `component-${component._id}`,
-        action: 'New 3D model uploaded',
-        user: 'System', // Since Component doesn't have createdBy field
+        action: 'New 3D component uploaded',
+        user: 'Admin',
         time: getTimeAgo(component.createdAt),
         type: 'model',
         createdAt: component.createdAt
       });
     });
 
+    // Get recent Model3D entries
+    const recentModel3D = await Model3D.find()
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .select('name createdAt');
+
+    recentModel3D.forEach(model => {
+      activities.push({
+        id: `model3d-${model._id}`,
+        action: 'New 3D model uploaded',
+        user: 'Admin',
+        time: getTimeAgo(model.createdAt),
+        type: 'model',
+        createdAt: model.createdAt
+      });
+    });
+
+    // Get recent projects created
+    const recentProjects = await Project.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('createdBy', 'name email')
+      .select('name createdBy createdAt');
+
+    recentProjects.forEach(project => {
+      const userName = project.createdBy ? 
+        (project.createdBy.name || project.createdBy.email.split('@')[0]) : 
+        'Unknown User';
+      
+      activities.push({
+        id: `project-${project._id}`,
+        action: 'New project created',
+        user: userName,
+        time: getTimeAgo(project.createdAt),
+        type: 'project',
+        createdAt: project.createdAt
+      });
+    });
+
     // Get recent house templates
     const recentTemplates = await HouseTemplate.find()
       .sort({ createdAt: -1 })
-      .limit(5)
+      .limit(3)
       .select('name createdAt');
 
     recentTemplates.forEach(template => {
       activities.push({
         id: `template-${template._id}`,
         action: 'House template created',
-        user: 'System', // Since HouseTemplate doesn't have createdBy field
+        user: 'Admin',
         time: getTimeAgo(template.createdAt),
         type: 'template',
         createdAt: template.createdAt
@@ -417,7 +536,7 @@ router.get('/growth-analytics', auth, async (req, res) => {
       createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }
     });
 
-    // Get component/3D model growth data
+    // Get 3D models growth data (Components + Model3D)
     const currentMonthComponents = await Component.countDocuments({
       createdAt: { $gte: thirtyDaysAgo }
     });
@@ -434,12 +553,12 @@ router.get('/growth-analytics', auth, async (req, res) => {
       createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }
     });
 
-    // Get house template (projects) growth data
-    const currentMonthProjects = await HouseTemplate.countDocuments({
+    // Get projects growth data from Project collection
+    const currentMonthProjects = await Project.countDocuments({
       createdAt: { $gte: thirtyDaysAgo }
     });
     
-    const previousMonthProjects = await HouseTemplate.countDocuments({
+    const previousMonthProjects = await Project.countDocuments({
       createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }
     });
 
@@ -476,7 +595,7 @@ router.get('/growth-analytics', auth, async (req, res) => {
         createdAt: { $gte: startOfDay, $lte: endOfDay }
       });
       
-      const dayProjects = await HouseTemplate.countDocuments({
+      const dayProjects = await Project.countDocuments({
         createdAt: { $gte: startOfDay, $lte: endOfDay }
       });
 

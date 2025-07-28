@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BellIcon,
-  Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   ChevronDownIcon,
 } from '@heroicons/react/24/outline';
@@ -66,17 +64,6 @@ const AdminNavbar = () => {
       </div>
 
       <div className="admin-navbar-right">
-        {/* Notifications */}
-        <button className="admin-notification-btn">
-          <BellIcon className="admin-icon" />
-          <span className="admin-notification-badge">3</span>
-        </button>
-
-        {/* Settings */}
-        <button className="admin-settings-btn">
-          <Cog6ToothIcon className="admin-icon" />
-        </button>
-
         {/* User Menu */}
         <div className="admin-user-menu">
           <button 
@@ -99,10 +86,6 @@ const AdminNavbar = () => {
 
           {showDropdown && (
             <div className="admin-dropdown-menu">
-              <button className="admin-dropdown-item">
-                <Cog6ToothIcon className="admin-dropdown-item-icon" />
-                Settings
-              </button>
               <button 
                 className="admin-dropdown-item logout"
                 onClick={handleLogout}

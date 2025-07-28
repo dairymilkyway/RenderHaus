@@ -30,6 +30,7 @@ const ModelManagement = () => {
     tags: '',
     materials: '',
     file: null,
+    thumbnailFile: null, // Add thumbnail file
     roomType: 'living-room', // For room templates
     subcategory: 'furniture' // For components
   });
@@ -43,6 +44,7 @@ const ModelManagement = () => {
     tags: '',
     materials: '',
     file: null,
+    thumbnailFile: null, // Add thumbnail file
     roomType: '',
     subcategory: ''
   });
@@ -127,6 +129,28 @@ const ModelManagement = () => {
     }
   };
 
+  // Handle thumbnail file upload
+  const handleThumbnailChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type (images only)
+      const allowedTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      
+      if (!allowedTypes.includes(fileExtension)) {
+        toast.error('Invalid file type. Please select an image file (.jpg, .jpeg, .png, .gif, .webp)');
+        return;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit for images
+        toast.error('Image file size must be less than 10MB');
+        return;
+      }
+      
+      setUploadData({ ...uploadData, thumbnailFile: file });
+    }
+  };
+
   // Upload new model
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -148,6 +172,9 @@ const ModelManagement = () => {
 
     const formData = new FormData();
     formData.append('modelFile', uploadData.file);
+    if (uploadData.thumbnailFile) {
+      formData.append('thumbnailFile', uploadData.thumbnailFile);
+    }
     formData.append('name', uploadData.name);
     formData.append('description', uploadData.description);
     formData.append('category', uploadData.category);
@@ -204,7 +231,8 @@ const ModelManagement = () => {
           try {
             const result = JSON.parse(xhr.responseText);
             if (result.status === 'success') {
-              toast.success('Model uploaded successfully!');
+              toast.success(`${result.type === 'room template' ? 'Room template' : 'Component'} uploaded successfully!`);
+              
               setShowUploadModal(false);
               setUploadData({
                 name: '',
@@ -214,6 +242,7 @@ const ModelManagement = () => {
                 tags: '',
                 materials: '',
                 file: null,
+                thumbnailFile: null,
                 roomType: 'living-room',
                 subcategory: 'furniture'
               });
@@ -295,6 +324,7 @@ const ModelManagement = () => {
       tags: (model.tags || []).join(', '),
       materials: (model.materials || []).join(', '),
       file: null,
+      thumbnailFile: null,
       roomType: model.roomType || 'living-room',
       subcategory: model.subcategory || model.category || 'furniture'
     });
@@ -545,13 +575,24 @@ const ModelManagement = () => {
           filteredModels.map(model => (
             <div key={model._id} className="model-card">
               <div className="model-preview">
-                {model.previewImage ? (
+                {model.thumbnail ? (
+                  <img src={model.thumbnail} alt={model.name} />
+                ) : model.previewImage ? (
                   <img src={model.previewImage} alt={model.name} />
                 ) : (
                   <div className="model-placeholder">
                     <CubeIcon className="placeholder-icon" />
                   </div>
                 )}
+                
+                {/* Thumbnail status indicator */}
+                <div className="thumbnail-status">
+                  {model.thumbnail ? (
+                    <span className="status-badge status-success">✓ 3D Preview</span>
+                  ) : (
+                    <span className="status-badge status-warning">⚠ No Preview</span>
+                  )}
+                </div>
               </div>
               
               <div className="model-info">
@@ -581,7 +622,7 @@ const ModelManagement = () => {
                 <button 
                   className="btn-icon"
                   onClick={() => window.open(model.fileUrl, '_blank')}
-                  title="View Model"
+                  title="View 3D Model File"
                 >
                   <EyeIcon className="icon" />
                 </button>
@@ -633,6 +674,27 @@ const ModelManagement = () => {
                     <CloudArrowUpIcon className="upload-icon" />
                     <p>Select 3D model file (.gltf, .glb, .obj, .fbx, .dae, .3ds)</p>
                     <p>Maximum file size: 250MB</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Thumbnail Image (Optional)</label>
+                <div className="file-upload">
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                    onChange={handleThumbnailChange}
+                  />
+                  <div className="file-upload-info">
+                    <CloudArrowUpIcon className="upload-icon" />
+                    <p>Select thumbnail image (.jpg, .jpeg, .png, .gif, .webp)</p>
+                    <p>Maximum file size: 10MB</p>
+                    {uploadData.thumbnailFile && (
+                      <p style={{color: '#28a745', fontWeight: 'bold'}}>
+                        Selected: {uploadData.thumbnailFile.name}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

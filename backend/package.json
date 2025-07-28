@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev:node": "nodemon index.js",
-    "dev:python": "python python_backend/app.py",
-    "dev": "concurrently \"npm run dev:node\" \"npm run dev:python\""
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "@uploadcare/upload-client": "^6.17.0",

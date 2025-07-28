@@ -29,7 +29,13 @@ router.put('/:id', auth, adminOnly, modelController.updateModel);
 router.delete('/:id', auth, adminOnly, modelController.deleteModel);
 
 // File upload routes (Admin only)
-router.post('/upload', auth, adminOnly, modelController.upload.single('modelFile'), modelController.uploadModelFile);
-router.put('/:id/upload', auth, adminOnly, modelController.upload.single('modelFile'), modelController.updateModelFile);
+router.post('/upload', auth, adminOnly, modelController.upload.fields([
+  { name: 'modelFile', maxCount: 1 },
+  { name: 'thumbnailFile', maxCount: 1 }
+]), modelController.uploadModelFile);
+router.put('/:id/upload', auth, adminOnly, modelController.upload.fields([
+  { name: 'modelFile', maxCount: 1 },
+  { name: 'thumbnailFile', maxCount: 1 }
+]), modelController.updateModelFile);
 
 module.exports = router;

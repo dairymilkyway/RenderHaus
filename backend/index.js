@@ -21,18 +21,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/renderhau
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Python backend health check
-const checkPythonBackend = async () => {
-  try {
-    const response = await axios.get(`http://localhost:${process.env.PYTHON_PORT || 5001}/api/python/health`);
-    console.log('Python backend status:', response.data);
-    return true;
-  } catch (error) {
-    console.error('Python backend error:', error.message);
-    return false;
-  }
-};
-
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
@@ -40,32 +28,7 @@ app.use('/api/models', require('./routes/models'));
 app.use('/api/design', require('./routes/rooms'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/projects', require('./routes/projects'));
-
-// Python backend proxy route
-app.use('/api/python', async (req, res, next) => {
-  try {
-    // Keep the full path including /api/python prefix
-    const pythonUrl = `http://localhost:${process.env.PYTHON_PORT || 5001}${req.originalUrl}`;
-    
-    console.log(`Proxying to Python backend: ${pythonUrl}`);
-    
-    const response = await axios({
-      method: req.method,
-      url: pythonUrl,
-      data: req.body,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    console.error('Python backend proxy error:', error.message);
-    res.status(500).json({
-      status: 'error',
-      message: 'Python backend connection failed'
-    });
-  }
-});
+app.use('/api/python', require('./routes/python'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -107,9 +70,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, async () => {
+const server = app.listen(PORT, () => {
   console.log(`Node.js server running on port ${PORT}`);
-  await checkPythonBackend();
 });
 
 // Configure server for large file uploads

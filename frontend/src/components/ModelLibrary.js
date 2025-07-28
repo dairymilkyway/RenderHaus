@@ -59,6 +59,16 @@ const ModelLibrary = ({ onModelSelect }) => {
         ];
         console.log('ModelLibrary - Combined models:', combinedModels);
         console.log('ModelLibrary - First model _id:', combinedModels[0]?._id);
+        
+        // Debug thumbnail data
+        console.log('ModelLibrary - Thumbnail debug:');
+        combinedModels.forEach((model, index) => {
+          console.log(`Model ${index + 1}: ${model.name}`);
+          console.log(`  - Has thumbnail: ${!!model.thumbnail}`);
+          console.log(`  - Thumbnail length: ${model.thumbnail ? model.thumbnail.length : 0}`);
+          console.log(`  - Has old thumbnails: ${!!(model.thumbnails && model.thumbnails[0])}`);
+        });
+        
         setModels(combinedModels);
         setPagination(data.data.pagination || {
           currentPage: 1,
@@ -159,7 +169,15 @@ const ModelLibrary = ({ onModelSelect }) => {
                 onClick={() => handleModelSelect(model)}
               >
                 <div className="model-thumbnail">
-                  {model.thumbnails && model.thumbnails[0] ? (
+                  {model.thumbnail ? (
+                    <img
+                      src={model.thumbnail}
+                      alt={model.name}
+                      onError={(e) => {
+                        e.target.src = '/placeholder-model.png';
+                      }}
+                    />
+                  ) : model.thumbnails && model.thumbnails[0] ? (
                     <img
                       src={model.thumbnails[0].url}
                       alt={model.name}

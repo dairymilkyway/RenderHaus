@@ -61,6 +61,7 @@ const model3DSchema = new mongoose.Schema({
       enum: ['small', 'medium', 'large']
     }
   }],
+  thumbnail: String, // URL to single manually uploaded thumbnail image
   // Physical properties
   dimensions: {
     width: { type: Number, required: true }, // in meters

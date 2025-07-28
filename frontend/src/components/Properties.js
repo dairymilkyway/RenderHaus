@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 // import MaterialsSection from './Functions/MaterialsSection';
 // import ViewSection from './Functions/ViewSection';
 import AISuggestSection from './Functions/AISuggestSection';
+import ExportSection from './Functions/ExportSection';
 // import AIExplainSection from './Functions/AIExplainSection';
 // import SaveExportSection from './Functions/SaveExportSection';
 import './css/Properties.css';
@@ -238,7 +239,7 @@ const Properties = ({ activeSection, onTemplateSelect, placedModels, onModelSele
       case 'ai-explain':
         return <div className="properties-panel"><h3>AI Explain</h3><p>AI explanations coming soon...</p></div>;
       case 'save-export':
-        return <div className="properties-panel"><h3>Save & Export</h3><p>Save and export options coming soon...</p></div>;
+        return <ExportSection placedModels={placedModels} />;
       default:
         return (
           <div className="properties-panel">

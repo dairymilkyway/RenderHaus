@@ -63,7 +63,7 @@ const EmailVerification = ({ email, onVerificationSuccess, onBackToLogin }) => {
       localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.data.user));
 
-      toast.success('Email verified successfully! Welcome to NaviBuild!', {
+      toast.success('Email verified successfully! Welcome to RenderHaus!', {
         onClose: () => {
           onVerificationSuccess();
         }

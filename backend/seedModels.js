@@ -16,8 +16,8 @@ const sampleModels = [
       size: 2048000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/modern-sofa-small.jpg", size: "small" },
-      { url: "https://example.com/thumbnails/modern-sofa-medium.jpg", size: "medium" }
+      { url: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=80", size: "small" },
+      { url: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?ixlib=rb-4.0.3&ixid=MnwxMJA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80", size: "medium" }
     ],
     dimensions: { width: 2.1, height: 0.8, depth: 0.9 },
     materials: [
@@ -47,7 +47,7 @@ const sampleModels = [
       size: 1024000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/office-chair-small.jpg", size: "small" }
+      { url: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", size: "small" }
     ],
     dimensions: { width: 0.65, height: 1.2, depth: 0.65 },
     materials: [
@@ -79,7 +79,7 @@ const sampleModels = [
       size: 1536000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/dining-table-small.jpg", size: "small" }
+      { url: "https://images.unsplash.com/photo-1549497538-303791108f95?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", size: "small" }
     ],
     dimensions: { width: 1.8, height: 0.75, depth: 0.9 },
     materials: [
@@ -109,7 +109,7 @@ const sampleModels = [
       size: 768000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/coffee-table-small.jpg", size: "small" }
+      { url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", size: "small" }
     ],
     dimensions: { width: 1.2, height: 0.4, depth: 0.6 },
     materials: [
@@ -141,7 +141,7 @@ const sampleModels = [
       size: 512000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/pendant-light-small.jpg", size: "small" }
+      { url: "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", size: "small" }
     ],
     dimensions: { width: 0.3, height: 0.4, depth: 0.3 },
     materials: [
@@ -171,7 +171,7 @@ const sampleModels = [
       size: 1024000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/floor-lamp-small.jpg", size: "small" }
+      { url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", size: "small" }
     ],
     dimensions: { width: 0.4, height: 1.6, depth: 0.4 },
     materials: [
@@ -203,7 +203,7 @@ const sampleModels = [
       size: 3072000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/refrigerator-small.jpg", size: "small" }
+      { url: "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", size: "small" }
     ],
     dimensions: { width: 0.7, height: 1.8, depth: 0.7 },
     materials: [
@@ -235,7 +235,7 @@ const sampleModels = [
       size: 256000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/wall-art-small.jpg", size: "small" }
+      { url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", size: "small" }
     ],
     dimensions: { width: 0.8, height: 0.6, depth: 0.05 },
     materials: [
@@ -267,7 +267,7 @@ const sampleModels = [
       size: 1536000
     },
     thumbnails: [
-      { url: "https://example.com/thumbnails/potted-plant-small.jpg", size: "small" }
+      { url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", size: "small" }
     ],
     dimensions: { width: 0.4, height: 0.8, depth: 0.4 },
     materials: [

@@ -583,7 +583,10 @@ const Canvas = ({ selectedTemplate, modelScales, selectedModel, onModelSelect, o
       <ThreeCanvas
         shadows
         camera={{ position: [8, 8, 8], fov: 50 }}
-        gl={{ antialias: true }}
+        gl={{ 
+          antialias: true, 
+          preserveDrawingBuffer: true 
+        }}
       >
         <Scene 
           selectedTemplate={selectedTemplate} 

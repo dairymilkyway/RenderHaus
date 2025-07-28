@@ -4,10 +4,8 @@ import AdminSidebar from './Sidebar';
 import {
   UserGroupIcon,
   FolderIcon,
-  ChartBarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  EyeIcon,
   ClockIcon,
   CubeIcon,
   HomeIcon,
@@ -19,9 +17,16 @@ const AdminDashboard = () => {
     totalUsers: 0,
     total3DModels: 0,
     totalProjects: 0,
-    totalHouseTemplates: 0,
     userGrowth: 0,
     projectGrowth: 0,
+  });
+
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [growthAnalytics, setGrowthAnalytics] = useState({
+    userGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
+    modelsGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
+    projectsGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
+    chartData: []
   });
 
   useEffect(() => {
@@ -128,21 +133,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [growthAnalytics, setGrowthAnalytics] = useState({
-    userGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
-    modelsGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
-    projectsGrowth: { current: 0, previous: 0, percentage: 0, trend: 'up' },
-    chartData: []
-  });
-
-  const [topProjects] = useState([
-    { id: 1, name: 'Modern Living Room', views: 2340, status: 'Active' },
-    { id: 2, name: 'Kitchen Redesign', views: 1890, status: 'Completed' },
-    { id: 3, name: 'Office Space Layout', views: 1456, status: 'Active' },
-    { id: 4, name: 'Bedroom Makeover', views: 1123, status: 'In Progress' },
-  ]);
-
   const StatCard = ({ title, value, icon: Icon, change, changeType }) => (
     <div className="stat-card">
       <div className="stat-header">
@@ -200,11 +190,6 @@ const AdminDashboard = () => {
                   icon={FolderIcon}
                   change={stats.projectGrowth}
                   changeType="positive"
-                />
-                <StatCard
-                  title="House Templates"
-                  value={stats.totalHouseTemplates.toLocaleString()}
-                  icon={HomeIcon}
                 />
               </div>
 
@@ -349,51 +334,6 @@ const AdminDashboard = () => {
                       <p>No recent activity found</p>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Top Projects */}
-              <div className="bento-item projects-section">
-                <div className="section-header">
-                  <h3>Top Projects</h3>
-                  <button className="view-all-btn">View All</button>
-                </div>
-                <div className="projects-list">
-                  {topProjects.map((project) => (
-                    <div key={project.id} className="project-item">
-                      <div className="project-info">
-                        <span className="project-name">{project.name}</span>
-                        <div className="project-stats">
-                          <EyeIcon className="view-icon" />
-                          <span>{project.views.toLocaleString()} views</span>
-                        </div>
-                      </div>
-                      <div className={`project-status ${project.status.toLowerCase().replace(' ', '-')}`}>
-                        {project.status}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bento-item actions-section">
-                <div className="section-header">
-                  <h3>Quick Actions</h3>
-                </div>
-                <div className="action-buttons">
-                  <button className="action-btn primary">
-                    <UserGroupIcon className="action-icon" />
-                    <span>Add New User</span>
-                  </button>
-                  <button className="action-btn secondary">
-                    <FolderIcon className="action-icon" />
-                    <span>Create Project</span>
-                  </button>
-                  <button className="action-btn tertiary">
-                    <ChartBarIcon className="action-icon" />
-                    <span>View Reports</span>
-                  </button>
                 </div>
               </div>
             </div>

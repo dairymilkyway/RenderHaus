@@ -1,12 +1,7 @@
 import React from 'react';
 import {
   Squares2X2Icon,
-  CubeIcon,
-  SwatchIcon,
-  CameraIcon,
   SparklesIcon,
-  LightBulbIcon,
-  CloudArrowUpIcon,
   ShareIcon,
 } from '@heroicons/react/24/outline';
 import './css/Sidebar.css';
@@ -27,27 +22,6 @@ const Sidebar = ({ activeSection, onSectionChange }) => {
           <span>Templates</span>
         </button>
         <button 
-          className={`tool-button ${activeSection === 'components' ? 'active' : ''}`}
-          onClick={() => handleSectionClick('components')}
-        >
-          <CubeIcon className="tool-icon" />
-          <span>Components</span>
-        </button>
-        <button 
-          className={`tool-button ${activeSection === 'materials' ? 'active' : ''}`}
-          onClick={() => handleSectionClick('materials')}
-        >
-          <SwatchIcon className="tool-icon" />
-          <span>Materials</span>
-        </button>
-        <button 
-          className={`tool-button ${activeSection === 'view' ? 'active' : ''}`}
-          onClick={() => handleSectionClick('view')}
-        >
-          <CameraIcon className="tool-icon" />
-          <span>View</span>
-        </button>
-        <button 
           className={`tool-button ${activeSection === 'ai-suggestions' ? 'active' : ''}`}
           onClick={() => handleSectionClick('ai-suggestions')}
         >
@@ -57,23 +31,6 @@ const Sidebar = ({ activeSection, onSectionChange }) => {
       </div>
 
       <div className="tool-section">
-        <button 
-          className={`tool-button ai-button ${activeSection === 'ai-explain' ? 'active' : ''}`}
-          onClick={() => handleSectionClick('ai-explain')}
-        >
-          <LightBulbIcon className="tool-icon" />
-          <span>AI Explain</span>
-        </button>
-      </div>
-
-      <div className="tool-section">
-        <button 
-          className={`tool-button ${activeSection === 'save-export' ? 'active' : ''}`}
-          onClick={() => handleSectionClick('save-export')}
-        >
-          <CloudArrowUpIcon className="tool-icon" />
-          <span>Save</span>
-        </button>
         <button 
           className={`tool-button ${activeSection === 'save-export' ? 'active' : ''}`}
           onClick={() => handleSectionClick('save-export')}
