@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Unauthorized from './components/Unauthorized';
 import AdminDashboard from './components/Admins/AdminDashboard';
 import UserManagement from './components/Admins/UserManagement';
+import ProjectManagement from './components/Admins/ProjectManagement';
 import ModelManagement from './components/Admins/ModelManagement';
 import ReportManagement from './components/Admins/ReportManagement';
 import './App.css';
@@ -35,15 +36,21 @@ function App() {
       }
     };
 
+    const handleLogout = () => {
+      setUser(null);
+    };
+
     // Listen for storage events
     window.addEventListener('storage', handleStorageChange);
     
-    // Also listen for custom events we'll dispatch on login
+    // Also listen for custom events we'll dispatch on login/logout
     window.addEventListener('userLogin', handleStorageChange);
+    window.addEventListener('userLogout', handleLogout);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('userLogin', handleStorageChange);
+      window.removeEventListener('userLogout', handleLogout);
     };
   }, []);
 
@@ -97,6 +104,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/projects"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ProjectManagement />
               </ProtectedRoute>
             }
           />

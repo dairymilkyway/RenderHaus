@@ -22,6 +22,9 @@ const ModelManagement = () => {
   const [selectedModel, setSelectedModel] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [filterStyle, setFilterStyle] = useState('all');
+  const [filterRoomType, setFilterRoomType] = useState('all');
+  const [filterSubcategory, setFilterSubcategory] = useState('all');
   const [uploadData, setUploadData] = useState({
     name: '',
     description: '',
@@ -489,7 +492,21 @@ const ModelManagement = () => {
     
     const matchesCategory = filterCategory === 'all' || modelCategory === filterCategory;
     
-    return matchesSearch && matchesCategory;
+    // Style filtering
+    const matchesStyle = filterStyle === 'all' || (model.style || '').toLowerCase() === filterStyle.toLowerCase();
+    
+    // Room type filtering (for room templates)
+    const matchesRoomType = filterRoomType === 'all' || 
+                           (model.type === 'room' && (model.roomType || '') === filterRoomType);
+    
+    // Subcategory filtering (for components)
+    const matchesSubcategory = filterSubcategory === 'all' || 
+                              (model.type === 'component' && 
+                               ((model.subcategory || model.category || '') === filterSubcategory));
+    
+    return matchesSearch && matchesCategory && matchesStyle && 
+           (modelCategory !== 'room template' || matchesRoomType) &&
+           (modelCategory !== 'components' || matchesSubcategory);
   });
 
   if (loading) {
@@ -551,16 +568,83 @@ const ModelManagement = () => {
           />
         </div>
         
-        <div className="filter-box">
-          <FunnelIcon className="filter-icon" />
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
+        <div className="filters-container">
+          <div className="filter-box">
+            <FunnelIcon className="filter-icon" />
+            <select
+              value={filterCategory}
+              onChange={(e) => {
+                setFilterCategory(e.target.value);
+                // Reset related filters when category changes
+                setFilterRoomType('all');
+                setFilterSubcategory('all');
+              }}
+            >
+              {categories.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-box">
+            <select
+              value={filterStyle}
+              onChange={(e) => setFilterStyle(e.target.value)}
+            >
+              <option value="all">All Styles</option>
+              {styles.map(style => (
+                <option key={style} value={style}>
+                  {style.charAt(0).toUpperCase() + style.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {filterCategory === 'room template' && (
+            <div className="filter-box">
+              <select
+                value={filterRoomType}
+                onChange={(e) => setFilterRoomType(e.target.value)}
+              >
+                <option value="all">All Room Types</option>
+                {subcategories['room template']?.map(roomType => (
+                  <option key={roomType} value={roomType}>
+                    {roomType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {filterCategory === 'components' && (
+            <div className="filter-box">
+              <select
+                value={filterSubcategory}
+                onChange={(e) => setFilterSubcategory(e.target.value)}
+              >
+                <option value="all">All Component Types</option>
+                {subcategories['components']?.map(subcategory => (
+                  <option key={subcategory} value={subcategory}>
+                    {subcategory.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <button 
+            className="btn-secondary filter-clear"
+            onClick={() => {
+              setSearchTerm('');
+              setFilterCategory('all');
+              setFilterStyle('all');
+              setFilterRoomType('all');
+              setFilterSubcategory('all');
+            }}
+            title="Clear all filters"
           >
-            {categories.map(cat => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
-          </select>
+            Clear Filters
+          </button>
         </div>
       </div>
 

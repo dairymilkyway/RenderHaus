@@ -28,7 +28,35 @@ app.use('/api/models', require('./routes/models'));
 app.use('/api/design', require('./routes/rooms'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/projects', require('./routes/projects'));
-app.use('/api/python', require('./routes/python'));
+
+// Admin routes
+app.use('/api/admin/projects', require('./routes/admin/projects'));
+
+// Python backend proxy route
+app.use('/api/python', async (req, res, next) => {
+  try {
+    // Keep the full path including /api/python prefix
+    const pythonUrl = `http://localhost:${process.env.PYTHON_PORT || 5001}${req.originalUrl}`;
+    
+    console.log(`Proxying to Python backend: ${pythonUrl}`);
+    
+    const response = await axios({
+      method: req.method,
+      url: pythonUrl,
+      data: req.body,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error('Python backend proxy error:', error.message);
+    res.status(500).json({
+      status: 'error',
+      message: 'Python backend connection failed'
+    });
+  }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

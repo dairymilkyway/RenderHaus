@@ -11,6 +11,7 @@ exports.getAllUsers = async (req, res, next) => {
       search = '', 
       role = '', 
       status = '',
+      verification = '',
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
@@ -45,12 +46,20 @@ exports.getAllUsers = async (req, res, next) => {
       filter.role = role;
     }
 
+    // Add verification filter
+    if (verification === 'verified') {
+      filter.isEmailVerified = true;
+    } else if (verification === 'unverified') {
+      filter.isEmailVerified = false;
+    }
+
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
     // Debug logging
     console.log('Status filter:', status);
+    console.log('Verification filter:', verification);
     console.log('Final filter:', JSON.stringify(filter));
 
     // Get users with pagination
@@ -261,11 +270,16 @@ exports.getUserById = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, email, role } = req.body;
+    const { name, email, role, gender, isEmailVerified } = req.body;
 
     // Validate input
     if (!name || !email) {
       throw new ValidationError('Name and email are required');
+    }
+
+    // Validate gender if provided
+    if (gender && !['male', 'female', 'other'].includes(gender)) {
+      throw new ValidationError('Invalid gender value');
     }
 
     // Check if user exists and is not soft-deleted
@@ -284,14 +298,31 @@ exports.updateUser = async (req, res, next) => {
       throw new ValidationError('Email already exists');
     }
 
+    // Prepare update data
+    const updateData = { name, email, role };
+    
+    // Add optional fields if provided
+    if (gender !== undefined) {
+      updateData.gender = gender;
+    }
+    
+    if (isEmailVerified !== undefined) {
+      updateData.isEmailVerified = isEmailVerified;
+      // If verifying email, clear OTP data
+      if (isEmailVerified) {
+        updateData.emailVerificationOTP = undefined;
+        updateData.emailVerificationExpires = undefined;
+      }
+    }
+
     // Update user
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { name, email, role },
+      updateData,
       { new: true, runValidators: true }
     ).select('-password');
 
-    logger.info(`Admin ${req.user.userId} updated user ${id}`);
+    logger.info(`Admin ${req.user.userId} updated user ${id}`, { updateData });
 
     res.json({
       status: 'success',

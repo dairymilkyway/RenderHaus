@@ -3,7 +3,6 @@
   max-width: 1400px;
   margin: 0 auto;
   min-height: calc(100vh - 4rem); /* Ensure minimum height */
-}
 
 /* Override admin layout scrolling for UserManagement */
 .admin-layout {
@@ -293,6 +292,13 @@
   color: #374151;
 }
 
+/* Actions column should not wrap */
+.users-table td:last-child {
+  white-space: nowrap;
+  width: 1%;
+  padding: 1rem 0.75rem;
+}
+
 .users-table tbody tr:hover {
   background: #f8fafc;
 }
@@ -385,10 +391,41 @@
   color: #0284c7;
 }
 
+/* Email Verification Badge */
+.email-verification-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.email-verification-badge.verified {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.email-verification-badge.unverified {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.verification-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  white-space: nowrap;
+  min-width: fit-content;
 }
 
 .btn-icon-only {
@@ -566,24 +603,28 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .modal {
   background: white;
   border-radius: 12px;
   box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
-  width: 90%;
+  width: 100%;
   max-width: 500px;
-  max-height: 90vh;
+  max-height: calc(100vh - 2rem);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  padding: 2rem 2rem 1.5rem 2rem;
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -614,25 +655,32 @@
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  gap: 1rem;
+  padding: 1.5rem 2rem 2rem 2rem;
   border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 /* Form Styles */
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
@@ -654,6 +702,22 @@
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-checkbox {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.4;
 }
 
 /* Danger Modal */
@@ -748,6 +812,19 @@
     padding: 0.75rem;
   }
   
+  /* Ensure action buttons stay horizontal on mobile */
+  .action-buttons {
+    flex-direction: row !important;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+  
+  .btn-icon-only {
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
+  }
+
   .modal {
     width: 95%;
     margin: 1rem;
@@ -757,22 +834,20 @@
 /* Enhanced Modal Styles */
 .modal-warning {
   border-top: 4px solid #f59e0b;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
+  max-width: 650px;
+  max-height: calc(100vh - 2rem);
 }
 
 .modal-danger {
   border-top: 4px solid #ef4444;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
+  max-width: 650px;
+  max-height: calc(100vh - 2rem);
 }
 
 .modal-warning .modal-body,
 .modal-danger .modal-body {
+  padding: 2.5rem;
   overflow-y: auto;
-  max-height: calc(90vh - 120px); /* Account for header and footer */
   flex: 1;
 }
 
@@ -784,9 +859,10 @@
 .warning-content h4,
 .danger-content h4 {
   color: #f59e0b;
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
+  margin: 0 0 2rem 0;
+  font-size: 1.5rem;
   font-weight: 600;
+  text-align: center;
 }
 
 .danger-content h4 {
@@ -807,33 +883,49 @@
 }
 
 .notice-section {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+}
+
+.notice-section > p {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .user-details {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 1rem;
-  margin: 1rem 0;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .user-details p {
-  margin: 0.25rem 0;
-  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .warning-text,
 .deactivation-notice {
-  margin: 1rem 0;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
 }
 
 .warning-text h5,
 .deactivation-notice h5 {
   color: #ef4444;
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
   font-weight: 600;
+}
+
+.deactivation-notice {
+  background: #fefbf2;
+  border: 1px solid #fed7aa;
 }
 
 .deactivation-notice h5 {
@@ -842,15 +934,15 @@
 
 .warning-text ul,
 .deactivation-notice ul {
-  margin: 0.5rem 0;
+  margin: 1rem 0;
   padding-left: 1.5rem;
 }
 
 .warning-text li,
 .deactivation-notice li {
-  margin: 0.5rem 0;
-  line-height: 1.5;
-  font-size: 0.9rem;
+  margin: 0.75rem 0;
+  line-height: 1.6;
+  font-size: 0.95rem;
 }
 
 .alternative-notice,
@@ -858,21 +950,21 @@
   background: #ecfdf5;
   border: 1px solid #10b981;
   border-radius: 8px;
-  padding: 1rem;
-  margin: 1rem 0;
+  padding: 1.5rem;
+  margin: 2rem 0;
 }
 
 .alternative-notice p,
 .recommendation-notice p {
   margin: 0;
   color: #047857;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .confirmation-checkbox {
-  margin: 1.5rem 0;
-  padding: 1rem;
+  margin: 2rem 0;
+  padding: 1.5rem;
   background: #fef3c7;
   border: 1px solid #f59e0b;
   border-radius: 8px;
@@ -881,10 +973,10 @@
 .checkbox-label {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 1rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.6;
   color: #92400e;
   font-weight: 500;
 }
@@ -906,11 +998,12 @@
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.75rem;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 0.875rem;
 }
 
 .btn-warning:hover {
@@ -959,12 +1052,63 @@
 
 /* Modal responsiveness for enhanced modals */
 @media (max-width: 768px) {
-  .modal-warning,
-  .modal-danger {
-    width: 95%;
-    margin: 0.5rem;
-    max-height: 95vh;
-    overflow-y: auto;
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .modal {
+    max-width: none;
+    width: 100%;
+    max-height: calc(100vh - 1rem);
+  }
+  
+  .modal-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-footer {
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .modal-warning .modal-body,
+  .modal-danger .modal-body {
+    padding: 2rem 1.5rem;
+  }
+  
+  .warning-text,
+  .deactivation-notice {
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .alternative-notice,
+  .recommendation-notice {
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .user-details {
+    padding: 1rem;
+  }
+  
+  .confirmation-checkbox {
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+  
+  .btn-warning,
+  .btn-danger,
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
   }
   
   .modal-warning .modal-body,

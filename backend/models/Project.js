@@ -142,6 +142,11 @@ const projectSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  // Soft delete field for archiving
+  deletedAt: {
+    type: Date,
+    default: null
   }
 });
 
