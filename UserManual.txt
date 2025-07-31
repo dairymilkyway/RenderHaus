@@ -1,0 +1,50 @@
+How to set-up:
+
+1. Go to backend directory then in the terminal run the command: "npm i"
+2. Go to frontend directory then in the terminal run the command: "npm i"
+3. Create .env file for both frontend and backend folder. Copy/paste the .env file bellow.
+4. To run the system:
+4.1. Go to backend directory then in the terminal run the command: "npm start"
+4.2. Go to fronted directory then in the terminal run the command: "npm start"
+4.3. Go to backend/python_backend directory then in the terminal run the command: "python app.py"
+
+Files for .env for backend and frontend:
+
+.env for backend: ---------------------------
+
+# MongoDB connection URI
+MONGODB_URI=mongodb+srv://cocomeme2003:gYMBph9Y7p0DYnK2@cluster0.ssdil.mongodb.net/renderhaus?retryWrites=true&w=majority&appName=Cluster0
+
+# Node.js server port
+PORT=5000
+
+# Python backend server port
+PYTHON_PORT=5001
+
+# JWT Configuration
+JWT_SECRET=12345
+JWT_ACCESS_EXPIRY=15m
+JWT_REFRESH_EXPIRY=7d
+
+# CORS Configuration
+CORS_ORIGIN=http://localhost:3000
+
+# Uploadcare Configuration
+UPLOADCARE_PUBLIC_KEY=19d2f4a5285847080be0
+UPLOADCARE_SECRET_KEY=20049956d6070e344bdc
+
+# Mailtrap Configuration
+MAILTRAP_USER=ad370c1730db1c
+MAILTRAP_PASS=33145d3248c642
+
+# Email Configuration
+EMAIL_FROM=noreply@navibuild.com
+EMAIL_FROM_NAME=NaviBuild
+
+----------------------------------------------
+
+.env for frontend: ---------------------------
+
+GENERATE_SOURCEMAP=false
+
+----------------------------------------------
