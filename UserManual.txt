@@ -1,12 +1,86 @@
 How to set-up:
 
-1. Go to backend directory then in the terminal run the command: "npm i"
-2. Go to frontend directory then in the terminal run the command: "npm i"
-3. Create .env file for both frontend and backend folder. Copy/paste the .env file bellow.
-4. To run the system:
-4.1. Go to backend directory then in the terminal run the command: "npm start"
-4.2. Go to fronted directory then in the terminal run the command: "npm start"
-4.3. Go to backend/python_backend directory then in the terminal run the command: "python app.py"
+PREREQUISITES:
+- Node.js (version 14 or higher) - Download from https://nodejs.org/
+- Python (version 3.8 or higher) - Download from https://python.org/
+- Git - Download from https://git-scm.com/
+
+INSTALLATION STEPS:
+
+1. Clone or download the project repository
+2. Install Node.js dependencies for backend:
+   - Go to backend directory: cd backend
+   - Run: npm install
+   
+3. Install Node.js dependencies for frontend:
+   - Go to frontend directory: cd frontend
+   - Run: npm install
+
+4. Install Python dependencies for AI/ML backend:
+   - Go to backend/python_backend directory: cd backend/python_backend
+   - Recommended: Create a virtual environment: python -m venv venv
+   - Activate virtual environment:
+     * Windows: venv\Scripts\activate
+     * macOS/Linux: source venv/bin/activate
+   - Install Python packages: pip install -r requirements.txt
+
+5. Create .env file for both frontend and backend folder. Copy/paste the .env file below.
+
+6. To run the system:
+6.1. Backend (Node.js): Go to backend directory then run: npm start
+6.2. Frontend (React): Go to frontend directory then run: npm start
+6.3. Python Backend (AI/ML): Go to backend/python_backend directory then run: python app.py
+
+REQUIRED LIBRARIES:
+
+Backend (Node.js) Dependencies:
+- @uploadcare/upload-client: File upload service
+- axios: HTTP requests
+- bcryptjs: Password hashing
+- cloudinary: Image/video management
+- cors: Cross-origin resource sharing
+- crypto-js: Cryptographic functions
+- dotenv: Environment variables
+- express: Web application framework
+- express-validator: Input validation
+- jsonwebtoken: JWT authentication
+- mongoose: MongoDB object modeling
+- multer: File upload handling
+- nodemailer: Email sending
+- uuid: Unique identifier generation
+- winston: Logging library
+
+Frontend (React) Dependencies:
+- @heroicons/react: Icon library
+- @react-three/drei: Three.js helpers for React
+- @react-three/fiber: React renderer for Three.js
+- chart.js & react-chartjs-2: Chart visualization
+- framer-motion: Animation library
+- html2canvas: Screenshot generation
+- jspdf: PDF generation
+- react: Core React library
+- react-dom: React DOM rendering
+- react-router-dom: Routing
+- react-scroll: Smooth scrolling
+- react-toastify: Toast notifications
+- three: 3D graphics library
+
+Python Backend Dependencies:
+- flask: Web framework
+- pymongo: MongoDB driver
+- python-dotenv: Environment variables
+- scikit-learn: Machine learning
+- numpy: Numerical computing
+- Pillow: Image processing
+- pygltflib: GLTF file handling
+- trimesh: 3D mesh processing
+- pyrender: 3D rendering
+- requests: HTTP requests
+- meshio: Mesh I/O operations
+
+All dependencies will be automatically installed when running:
+- npm install (for Node.js packages)
+- pip install -r requirements.txt (for Python packages)
 
 Files for .env for backend and frontend:
 
