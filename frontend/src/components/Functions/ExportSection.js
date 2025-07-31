@@ -7,16 +7,86 @@ import {
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import * as THREE from 'three';
 
 const ExportSection = ({ placedModels = [] }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAiSuggestions, setCurrentAiSuggestions] = useState([]);
   const [currentColorSuggestions, setCurrentColorSuggestions] = useState([]);
 
-  // Capture 3D canvas screenshot
-  const capture3DCanvas = async () => {
+  // Helper function to draw a table in PDF
+  const drawTable = (pdf, headers, rows, startX, startY, columnWidths) => {
+    const cellHeight = 8;
+    const headerHeight = 10;
+    let currentY = startY;
+
+    // Draw headers
+    pdf.setFillColor(240, 240, 240);
+    pdf.rect(startX, currentY, columnWidths.reduce((a, b) => a + b, 0), headerHeight, 'F');
+    
+    pdf.setFont(undefined, 'bold');
+    pdf.setFontSize(10);
+    let currentX = startX;
+    headers.forEach((header, index) => {
+      pdf.text(header, currentX + 2, currentY + 7);
+      currentX += columnWidths[index];
+    });
+    
+    currentY += headerHeight;
+
+    // Draw rows
+    pdf.setFont(undefined, 'normal');
+    pdf.setFontSize(9);
+    rows.forEach((row, rowIndex) => {
+      // Alternate row background
+      if (rowIndex % 2 === 0) {
+        pdf.setFillColor(250, 250, 250);
+        pdf.rect(startX, currentY, columnWidths.reduce((a, b) => a + b, 0), cellHeight, 'F');
+      }
+      
+      currentX = startX;
+      row.forEach((cell, cellIndex) => {
+        // Wrap text if it's too long
+        const maxWidth = columnWidths[cellIndex] - 4;
+        const wrappedText = pdf.splitTextToSize(cell, maxWidth);
+        
+        if (wrappedText.length > 1) {
+          // Multi-line cell
+          wrappedText.forEach((line, lineIndex) => {
+            pdf.text(line, currentX + 2, currentY + 6 + (lineIndex * 4));
+          });
+          if (wrappedText.length > 2) {
+            currentY += (wrappedText.length - 1) * 4; // Adjust for extra lines
+          }
+        } else {
+          pdf.text(cell, currentX + 2, currentY + 6);
+        }
+        currentX += columnWidths[cellIndex];
+      });
+      currentY += cellHeight;
+    });
+
+    // Draw table borders
+    pdf.setDrawColor(200, 200, 200);
+    // Horizontal lines
+    for (let i = 0; i <= rows.length + 1; i++) {
+      const y = startY + (i === 0 ? 0 : headerHeight) + (i > 1 ? (i - 1) * cellHeight : 0);
+      pdf.line(startX, y, startX + columnWidths.reduce((a, b) => a + b, 0), y);
+    }
+    // Vertical lines
+    currentX = startX;
+    for (let i = 0; i <= columnWidths.length; i++) {
+      pdf.line(currentX, startY, currentX, currentY);
+      if (i < columnWidths.length) currentX += columnWidths[i];
+    }
+
+    return currentY + 10; // Return next Y position
+  };
+
+  // Capture 3D canvas screenshot (main view only)
+  const capture3DCanvas = async (perspective = 'default') => {
     try {
-      console.log('Starting 3D canvas capture...');
+      console.log(`Starting 3D canvas capture for ${perspective} view...`);
       
       // Look for the Three.js canvas element
       const canvasElements = document.querySelectorAll('canvas');
@@ -29,14 +99,10 @@ const ExportSection = ({ placedModels = [] }) => {
 
       // Get the first canvas (usually the Three.js canvas)
       const canvasElement = canvasElements[0];
-      console.log('Canvas element:', canvasElement);
-      console.log('Canvas dimensions:', canvasElement.width, 'x', canvasElement.height);
-
-      // Create a new canvas to capture the current frame
+      
+      // Create capture canvas
       const captureCanvas = document.createElement('canvas');
       const ctx = captureCanvas.getContext('2d');
-      
-      // Set the capture canvas size to match the original
       captureCanvas.width = canvasElement.width || 800;
       captureCanvas.height = canvasElement.height || 600;
       
@@ -45,17 +111,25 @@ const ExportSection = ({ placedModels = [] }) => {
       // Draw the Three.js canvas onto our capture canvas
       ctx.drawImage(canvasElement, 0, 0);
       
+      // Add a simple label for the main view
+      ctx.fillStyle = 'rgba(60, 60, 60, 0.9)';
+      ctx.fillRect(10, 10, 120, 35);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('DESIGN VIEW', 70, 32);
+      ctx.textAlign = 'left'; // Reset alignment
+      
       // Test if the canvas has any content
       const imageData = ctx.getImageData(0, 0, captureCanvas.width, captureCanvas.height);
       const hasContent = imageData.data.some((value, index) => index % 4 !== 3 && value !== 0);
       
       if (hasContent) {
-        console.log('Canvas capture completed successfully with content');
+        console.log(`Canvas capture completed successfully for ${perspective} view`);
         return captureCanvas;
       } else {
-        console.log('Canvas capture completed but appears empty');
-        // Return the canvas anyway, it might have subtle content
-        return captureCanvas;
+        console.log(`Canvas capture completed but appears empty for ${perspective} view`);
+        return captureCanvas; // Return anyway, might have subtle content
       }
     } catch (error) {
       console.error('Error capturing 3D canvas:', error);
@@ -73,7 +147,7 @@ const ExportSection = ({ placedModels = [] }) => {
         current_models: placedModels.map(model => ({
           name: model.name,
           category: model.category,
-          position: model.position,
+          // Removed position information as requested
           modelFile: model.modelFile,
           fileUrl: model.modelFile?.fileUrl || model.fileUrl,
           _id: model._id
@@ -90,20 +164,9 @@ const ExportSection = ({ placedModels = [] }) => {
 
       if (furnitureResponse.ok) {
         const furnitureData = await furnitureResponse.json();
-        suggestions = furnitureData.suggestions || [];
+        suggestions = furnitureData.suggestions?.furniture_suggestions || [];
+        colors = furnitureData.suggestions?.color_suggestions || [];
         setCurrentAiSuggestions(suggestions);
-      }
-
-      // Fetch color suggestions
-      const colorResponse = await fetch('http://localhost:5000/api/python/ai/color-suggestions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (colorResponse.ok) {
-        const colorData = await colorResponse.json();
-        colors = colorData.color_suggestions || [];
         setCurrentColorSuggestions(colors);
       }
     } catch (error) {
@@ -114,14 +177,22 @@ const ExportSection = ({ placedModels = [] }) => {
   };
 
   const generatePDF = async () => {
+    console.log('=== PDF GENERATION STARTED ===');
     setIsGenerating(true);
     
     try {
       console.log('Starting PDF generation...');
       
-      // First capture the 3D canvas
-      const canvasCapture = await capture3DCanvas();
-      console.log('Canvas capture result:', canvasCapture);
+      // Capture the 3D scene (main view only)
+      console.log('Capturing main view...');
+      const mainCapture = await capture3DCanvas('default');
+      console.log('Main capture result:', !!mainCapture);
+      
+      console.log('Final canvas capture result:', { 
+        main: !!mainCapture,
+        mainWidth: mainCapture?.width,
+        mainHeight: mainCapture?.height
+      });
       
       // Then fetch the latest AI data
       const { suggestions: aiSuggestions, colors: colorSuggestions } = await fetchAIDataForExport();
@@ -150,11 +221,11 @@ const ExportSection = ({ placedModels = [] }) => {
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += 15;
 
-      // Section: 3D Models
+      // Section: 3D Models in Scene (Table Format)
       pdf.setFontSize(16);
       pdf.setFont(undefined, 'bold');
       pdf.text('3D Models in Scene', margin, yPosition);
-      yPosition += 10;
+      yPosition += 15;
 
       if (placedModels.length === 0) {
         pdf.setFontSize(12);
@@ -162,36 +233,17 @@ const ExportSection = ({ placedModels = [] }) => {
         pdf.text('No 3D models placed in the scene.', margin, yPosition);
         yPosition += 15;
       } else {
-        pdf.setFontSize(12);
-        pdf.setFont(undefined, 'normal');
+        // Prepare table data (removed position and description)
+        const headers = ['#', 'Model Name', 'Category'];
+        const columnWidths = [15, 90, 85]; // Total: 190 (fits in A4 width with margins)
         
-        placedModels.forEach((model, index) => {
-          // Check if we need a new page
-          if (yPosition > pageHeight - 40) {
-            pdf.addPage();
-            yPosition = margin;
-          }
-          
-          pdf.setFont(undefined, 'bold');
-          pdf.text(`${index + 1}. ${model.name || 'Unnamed Model'}`, margin, yPosition);
-          yPosition += 8;
-          
-          pdf.setFont(undefined, 'normal');
-          if (model.category) {
-            pdf.text(`   Category: ${model.category}`, margin, yPosition);
-            yPosition += 6;
-          }
-          if (model.description) {
-            const lines = pdf.splitTextToSize(`   Description: ${model.description}`, pageWidth - margin * 2 - 10);
-            pdf.text(lines, margin, yPosition);
-            yPosition += lines.length * 6;
-          }
-          if (model.position) {
-            pdf.text(`   Position: X:${model.position.x?.toFixed(2) || 0}, Y:${model.position.y?.toFixed(2) || 0}, Z:${model.position.z?.toFixed(2) || 0}`, margin, yPosition);
-            yPosition += 6;
-          }
-          yPosition += 5;
-        });
+        const rows = placedModels.map((model, index) => [
+          (index + 1).toString(),
+          model.name || 'Unnamed Model',
+          model.category || 'N/A'
+        ]);
+        
+        yPosition = drawTable(pdf, headers, rows, margin, yPosition, columnWidths);
       }
 
       yPosition += 10;
@@ -205,45 +257,44 @@ const ExportSection = ({ placedModels = [] }) => {
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += 15;
 
-      // Add 3D Canvas Screenshot
-      if (canvasCapture) {
-        console.log('Adding 3D canvas to PDF...');
+      // Add 3D Design Preview (Main View Only)
+      if (mainCapture) {
+        console.log('Adding 3D design preview to PDF...');
         
         // Check if we need a new page for the image
-        if (yPosition > pageHeight - 120) {
+        if (yPosition > pageHeight - 150) {
           pdf.addPage();
           yPosition = margin;
         }
 
-        pdf.setFontSize(14);
+        // Add section title
+        pdf.setFontSize(16);
         pdf.setFont(undefined, 'bold');
-        pdf.text('3D Scene Preview', margin, yPosition);
+        pdf.text('3D Design Preview', margin, yPosition);
         yPosition += 15;
 
-        // Add the canvas image
-        const imgData = canvasCapture.toDataURL('image/png');
-        console.log('Image data length:', imgData.length);
-        console.log('Image data preview:', imgData.substring(0, 100));
+        // Main perspective
+        console.log('Adding main view to PDF...');
+        pdf.setFontSize(12);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('Design View', margin, yPosition);
+        yPosition += 10;
         
-        const imgWidth = Math.min(150, pageWidth - margin * 2);
-        const imgHeight = (canvasCapture.height * imgWidth) / canvasCapture.width;
+        const imgData = mainCapture.toDataURL('image/png');
+        const imgWidth = Math.min(120, pageWidth - margin * 2);
+        const imgHeight = (mainCapture.height * imgWidth) / mainCapture.width;
         
-        console.log('Image dimensions for PDF:', imgWidth, 'x', imgHeight);
-        
-        // Center the image
-        const imgX = (pageWidth - imgWidth) / 2;
-        
-        pdf.addImage(imgData, 'PNG', imgX, yPosition, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
         yPosition += imgHeight + 15;
-        
-        console.log('3D canvas added to PDF successfully');
+
+        console.log('3D design preview added to PDF successfully');
 
         // Add separator line
         pdf.setDrawColor(200, 200, 200);
         pdf.line(margin, yPosition, pageWidth - margin, yPosition);
         yPosition += 15;
       } else {
-        console.log('No canvas capture available, skipping 3D scene preview');
+        console.log('No canvas capture available, skipping 3D design preview');
       }
 
       // Section: AI Furniture Suggestions
@@ -258,30 +309,18 @@ const ExportSection = ({ placedModels = [] }) => {
         pdf.text('No AI furniture suggestions available.', margin, yPosition);
         yPosition += 15;
       } else {
-        pdf.setFontSize(12);
+        // Prepare table data for AI suggestions
+        const headers = ['#', 'Item', 'Category', 'Reason'];
+        const columnWidths = [15, 40, 35, 100]; // Total: 190
         
-        aiSuggestions.forEach((suggestion, index) => {
-          // Check if we need a new page
-          if (yPosition > pageHeight - 50) {
-            pdf.addPage();
-            yPosition = margin;
-          }
-          
-          pdf.setFont(undefined, 'bold');
-          pdf.text(`${index + 1}. ${suggestion.furniture_type}`, margin, yPosition);
-          yPosition += 8;
-          
-          pdf.setFont(undefined, 'normal');
-          const reasonLines = pdf.splitTextToSize(`   Reason: ${suggestion.reason}`, pageWidth - margin * 2 - 10);
-          pdf.text(reasonLines, margin, yPosition);
-          yPosition += reasonLines.length * 6;
-          
-          if (suggestion.confidence) {
-            pdf.text(`   Confidence: ${Math.round(suggestion.confidence * 100)}%`, margin, yPosition);
-            yPosition += 6;
-          }
-          yPosition += 5;
-        });
+        const rows = aiSuggestions.map((suggestion, index) => [
+          (index + 1).toString(),
+          suggestion.item || suggestion.furniture_type || 'N/A',
+          suggestion.category || 'N/A',
+          suggestion.reason || 'No reason provided'
+        ]);
+        
+        yPosition = drawTable(pdf, headers, rows, margin, yPosition, columnWidths);
       }
 
       yPosition += 10;
@@ -295,11 +334,11 @@ const ExportSection = ({ placedModels = [] }) => {
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += 15;
 
-      // Section: AI Color Suggestions
+      // Section: AI Color Suggestions (Table Format)
       pdf.setFontSize(16);
       pdf.setFont(undefined, 'bold');
       pdf.text('AI Color Suggestions', margin, yPosition);
-      yPosition += 10;
+      yPosition += 15;
 
       if (colorSuggestions.length === 0) {
         pdf.setFontSize(12);
@@ -307,29 +346,18 @@ const ExportSection = ({ placedModels = [] }) => {
         pdf.text('No AI color suggestions available.', margin, yPosition);
         yPosition += 15;
       } else {
-        pdf.setFontSize(12);
+        // Prepare table data for color suggestions
+        const headers = ['#', 'Type', 'Color Code', 'Description'];
+        const columnWidths = [15, 35, 40, 100]; // Total: 190
         
-        colorSuggestions.forEach((colorSuggestion, index) => {
-          // Check if we need a new page
-          if (yPosition > pageHeight - 50) {
-            pdf.addPage();
-            yPosition = margin;
-          }
-          
-          pdf.setFont(undefined, 'bold');
-          pdf.text(`${index + 1}. ${colorSuggestion.color}`, margin, yPosition);
-          yPosition += 8;
-          
-          pdf.setFont(undefined, 'normal');
-          if (colorSuggestion.hex_code) {
-            pdf.text(`   Color Code: ${colorSuggestion.hex_code}`, margin, yPosition);
-            yPosition += 6;
-          }
-          
-          const reasonLines = pdf.splitTextToSize(`   Reason: ${colorSuggestion.reason}`, pageWidth - margin * 2 - 10);
-          pdf.text(reasonLines, margin, yPosition);
-          yPosition += reasonLines.length * 6 + 5;
-        });
+        const rows = colorSuggestions.map((colorSuggestion, index) => [
+          (index + 1).toString(),
+          colorSuggestion.type || 'Color',
+          colorSuggestion.color || colorSuggestion.hex_code || 'N/A',
+          colorSuggestion.description || colorSuggestion.reason || 'No description'
+        ]);
+        
+        yPosition = drawTable(pdf, headers, rows, margin, yPosition, columnWidths);
       }
 
       // Add footer

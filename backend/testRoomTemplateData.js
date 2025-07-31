@@ -85,10 +85,32 @@ const seedRoomTemplateTestData = async () => {
       }
     }
 
+    // Helper function to create SVG preview
+    const createSVGPreview = (projectName, gradient1, gradient2, itemCount) => {
+      const svg = `<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:${gradient1};stop-opacity:1" />
+            <stop offset="100%" style="stop-color:${gradient2};stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="400" height="300" fill="url(#grad)"/>
+        <rect x="50" y="120" width="100" height="60" fill="white" fill-opacity="0.2" rx="4"/>
+        <rect x="200" y="100" width="80" height="80" fill="white" fill-opacity="0.2" rx="4"/>
+        <rect x="320" y="80" width="50" height="120" fill="white" fill-opacity="0.2" rx="4"/>
+        <circle cx="350" cy="50" r="20" fill="white" fill-opacity="0.3"/>
+        <text x="200" y="40" fill="white" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle">${projectName}</text>
+        <text x="200" y="270" fill="white" font-family="Arial" font-size="14" text-anchor="middle">${itemCount} items</text>
+      </svg>`;
+      return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    };
+
     // Create sample projects with various combinations of room templates and components
     const projects = [
       {
         name: 'Modern Living Space',
+        description: 'A contemporary living room design',
+        preview: createSVGPreview('Modern Living Space', '#667eea', '#764ba2', 4),
         objects: [
           { modelId: savedRoomTemplates[0]._id, modelType: 'Model3D' }, // Living Room Template A
           { modelId: savedComponents[0]._id, modelType: 'Component' }, // Modern Sofa
@@ -98,6 +120,8 @@ const seedRoomTemplateTestData = async () => {
       },
       {
         name: 'Cozy Bedroom Design',
+        description: 'A warm and comfortable bedroom setup',
+        preview: createSVGPreview('Cozy Bedroom', '#f093fb', '#f5576c', 3),
         objects: [
           { modelId: savedRoomTemplates[1]._id, modelType: 'Model3D' }, // Bedroom Template B
           { modelId: savedComponents[4]._id, modelType: 'Component' }, // Bookshelf
@@ -106,6 +130,8 @@ const seedRoomTemplateTestData = async () => {
       },
       {
         name: 'Kitchen & Dining Area',
+        description: 'Modern kitchen with dining space',
+        preview: createSVGPreview('Kitchen & Dining', '#4facfe', '#00f2fe', 4),
         objects: [
           { modelId: savedRoomTemplates[2]._id, modelType: 'Model3D' }, // Kitchen Template C
           { modelId: savedComponents[3]._id, modelType: 'Component' }, // Dining Chair
@@ -115,6 +141,8 @@ const seedRoomTemplateTestData = async () => {
       },
       {
         name: 'Home Office Setup',
+        description: 'Professional workspace design',
+        preview: createSVGPreview('Home Office', '#43e97b', '#38d9a9', 3),
         objects: [
           { modelId: savedRoomTemplates[3]._id, modelType: 'Model3D' }, // Office Template D
           { modelId: savedComponents[4]._id, modelType: 'Component' }, // Bookshelf
@@ -123,6 +151,8 @@ const seedRoomTemplateTestData = async () => {
       },
       {
         name: 'Luxury Suite',
+        description: 'High-end bedroom and bathroom combination',
+        preview: createSVGPreview('Luxury Suite', '#fa709a', '#fee140', 5),
         objects: [
           { modelId: savedRoomTemplates[4]._id, modelType: 'Model3D' }, // Bathroom Template E
           { modelId: savedRoomTemplates[1]._id, modelType: 'Model3D' }, // Bedroom Template B
@@ -133,6 +163,8 @@ const seedRoomTemplateTestData = async () => {
       },
       {
         name: 'Minimalist Space',
+        description: 'Clean and simple design',
+        preview: createSVGPreview('Minimalist Space', '#a8edea', '#fed6e3', 2),
         objects: [
           { modelId: savedRoomTemplates[0]._id, modelType: 'Model3D' }, // Living Room Template A (popular)
           { modelId: savedComponents[0]._id, modelType: 'Component' }   // Modern Sofa (popular)
@@ -140,6 +172,8 @@ const seedRoomTemplateTestData = async () => {
       },
       {
         name: 'Family Home',
+        description: 'Complete family living space',
+        preview: createSVGPreview('Family Home', '#ffecd2', '#fcb69f', 5),
         objects: [
           { modelId: savedRoomTemplates[0]._id, modelType: 'Model3D' }, // Living Room Template A (popular again)
           { modelId: savedRoomTemplates[2]._id, modelType: 'Model3D' }, // Kitchen Template C

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   DocumentDuplicateIcon, 
   TrashIcon, 
-  PencilIcon,
   FolderOpenIcon,
   CalendarIcon,
-  EyeIcon
+  EyeIcon,
+  PhotoIcon
 } from '@heroicons/react/24/outline';
+import MiniCanvas from './MiniCanvas';
 import './css/ProjectManager.css';
 
 const ProjectManager = ({ 
@@ -24,7 +25,6 @@ const ProjectManager = ({
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
-  const [editingProject, setEditingProject] = useState(null);
 
   useEffect(() => {
     if (isVisible && user) {
@@ -288,14 +288,6 @@ const ProjectManager = ({
     await saveCurrentProject(newProjectName, newProjectDescription, true);
   };
 
-  const handleQuickSave = async () => {
-    if (currentProject?._id) {
-      await saveCurrentProject(currentProject.name, currentProject.description, false);
-    } else {
-      setShowNewProjectDialog(true);
-    }
-  };
-
   if (!isVisible) return null;
 
   return (
@@ -313,13 +305,6 @@ const ProjectManager = ({
             disabled={loading}
           >
             Save as New Project
-          </button>
-          <button 
-            className="action-button secondary"
-            onClick={handleQuickSave}
-            disabled={loading || placedModels.length === 0}
-          >
-            {currentProject?._id ? 'Update Current' : 'Quick Save'}
           </button>
           <button 
             className="action-button tertiary"
@@ -355,51 +340,70 @@ const ProjectManager = ({
           <div className="projects-grid">
             {projects.map(project => (
               <div key={project._id} className="project-card">
-                <div className="project-header">
-                  <h4 className="project-name">{project.name}</h4>
-                  <span className="project-status">{project.status}</span>
-                </div>
-                
-                {project.description && (
-                  <p className="project-description">{project.description}</p>
-                )}
-
-                <div className="project-meta">
-                  <div className="meta-item">
-                    <CalendarIcon className="meta-icon" />
-                    <span>{new Date(project.lastModified).toLocaleDateString()}</span>
-                  </div>
-                  <div className="meta-item">
-                    <EyeIcon className="meta-icon" />
-                    <span>{project.objects.length} items</span>
-                  </div>
+                {/* Project Preview - Mini 3D Canvas */}
+                <div className="project-preview">
+                  <MiniCanvas 
+                    project={project}
+                    width={280}
+                    height={180}
+                    className="project-mini-canvas"
+                  />
+                  {project.objects?.length === 0 && (
+                    <div className="preview-placeholder empty-project">
+                      <PhotoIcon className="preview-icon" />
+                      <span>Empty Project</span>
+                      <small>No models added</small>
+                    </div>
+                  )}
                 </div>
 
-                <div className="project-actions">
-                  <button 
-                    className="action-btn load"
-                    onClick={() => loadProject(project)}
-                    disabled={loading}
-                    title="Load Project"
-                  >
-                    <FolderOpenIcon />
-                  </button>
-                  <button 
-                    className="action-btn duplicate"
-                    onClick={() => duplicateProject(project)}
-                    disabled={loading}
-                    title="Duplicate Project"
-                  >
-                    <DocumentDuplicateIcon />
-                  </button>
-                  <button 
-                    className="action-btn delete"
-                    onClick={() => deleteProject(project._id)}
-                    disabled={loading}
-                    title="Delete Project"
-                  >
-                    <TrashIcon />
-                  </button>
+                <div className="project-content">
+                  <div className="project-header">
+                    <h4 className="project-name">{project.name}</h4>
+                    <span className="project-status">{project.status}</span>
+                  </div>
+                  
+                  {project.description && (
+                    <p className="project-description">{project.description}</p>
+                  )}
+
+                  <div className="project-meta">
+                    <div className="meta-item">
+                      <CalendarIcon className="meta-icon" />
+                      <span>{new Date(project.lastModified).toLocaleDateString()}</span>
+                    </div>
+                    <div className="meta-item">
+                      <EyeIcon className="meta-icon" />
+                      <span>{project.objects.length} items</span>
+                    </div>
+                  </div>
+
+                  <div className="project-actions">
+                    <button 
+                      className="action-btn load"
+                      onClick={() => loadProject(project)}
+                      disabled={loading}
+                      title="Load Project"
+                    >
+                      <FolderOpenIcon />
+                    </button>
+                    <button 
+                      className="action-btn duplicate"
+                      onClick={() => duplicateProject(project)}
+                      disabled={loading}
+                      title="Duplicate Project"
+                    >
+                      <DocumentDuplicateIcon />
+                    </button>
+                    <button 
+                      className="action-btn delete"
+                      onClick={() => deleteProject(project._id)}
+                      disabled={loading}
+                      title="Delete Project"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

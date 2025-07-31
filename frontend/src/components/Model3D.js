@@ -3,7 +3,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 // Inner component that uses useGLTF hook properly
-const ModelMesh = ({ url, position, scale, rotation, isSelected }) => {
+const ModelMesh = ({ url, position, scale, rotation, isSelected, color, selectedObject }) => {
   const meshRef = useRef();
   
   // useGLTF must be called unconditionally at the top level
@@ -23,6 +23,11 @@ const ModelMesh = ({ url, position, scale, rotation, isSelected }) => {
         if (material) {
           // Create a new material instance to avoid shared state issues
           const newMaterial = material.clone();
+          
+          // Apply color if provided
+          if (color) {
+            newMaterial.color = new THREE.Color(color);
+          }
           
           // Safely set emissive property
           if (newMaterial.emissive !== undefined) {
@@ -71,7 +76,7 @@ const LoadingFallback = ({ position }) => (
 );
 
 // Main component that handles loading states and errors
-const Model3D = ({ url, position = [0, 0, 0], scale = [1, 1, 1], rotation = [0, 0, 0], isSelected = false }) => {
+const Model3D = ({ url, position = [0, 0, 0], scale = [1, 1, 1], rotation = [0, 0, 0], isSelected = false, color, selectedObject }) => {
   const [error, setError] = useState(false);
   
   if (!url) {
@@ -94,6 +99,8 @@ const Model3D = ({ url, position = [0, 0, 0], scale = [1, 1, 1], rotation = [0, 
         scale={scale}
         rotation={rotation}
         isSelected={isSelected}
+        color={color}
+        selectedObject={selectedObject}
       />
     </Suspense>
   );

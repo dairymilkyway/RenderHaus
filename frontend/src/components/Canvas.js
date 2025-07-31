@@ -92,21 +92,30 @@ const grassTexture = createStableTexture('grass');
 const dirtTexture = createStableTexture('dirt');
 
 // Simple positioned model component (no drag & drop)
-const PositionedModel = ({ model, isSelected, onModelSelect }) => {
+const PositionedModel = ({ model, isSelected, onModelSelect, onObjectSelect, selectedObject }) => {
+  const handleClick = (e) => {
+    e.stopPropagation();
+    onModelSelect(model); // For backward compatibility
+    if (onObjectSelect) {
+      onObjectSelect(model); // For object properties panel
+    }
+  };
+
   return (
     <group
       position={model.position}
-      onClick={(e) => {
-        e.stopPropagation();
-        onModelSelect(model); // Pass the full model object, not just the ID
-      }}
+      rotation={model.rotation || [0, 0, 0]}
+      scale={model.scale || [1, 1, 1]}
+      onClick={handleClick}
     >
       <Model3D
         url={model.url}
         position={[0, 0, 0]}
-        scale={model.scale}
-        rotation={model.rotation || [0, 0, 0]}
+        scale={[1, 1, 1]} // Use group scale instead
+        rotation={[0, 0, 0]} // Use group rotation instead
         isSelected={isSelected}
+        color={model.color} // Pass color to Model3D
+        selectedObject={selectedObject}
       />
       
       {/* Visual indicator when selected */}
@@ -419,7 +428,7 @@ const Platform = () => {
   );
 };
 
-const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate: 0.8 }, selectedModel, onModelSelect, onAddModel, placedModels: externalPlacedModels }) => {
+const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate: 0.8 }, selectedModel, onModelSelect, onAddModel, placedModels: externalPlacedModels, onObjectSelect, selectedObject }) => {
   const { camera, gl } = useThree();
   const [placedModels, setPlacedModels] = useState([]);
 
@@ -556,6 +565,8 @@ const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate
           model={model}
           isSelected={selectedModel?.id === model.id}
           onModelSelect={onModelSelect}
+          onObjectSelect={onObjectSelect}
+          selectedObject={selectedObject}
         />
       ))}
       
@@ -577,7 +588,16 @@ const Scene = ({ selectedTemplate, modelScales = { furniture: 0.08, roomTemplate
   );
 };
 
-const Canvas = ({ selectedTemplate, modelScales, selectedModel, onModelSelect, onAddModel, placedModels }) => {
+const Canvas = ({ 
+  selectedTemplate, 
+  modelScales, 
+  selectedModel, 
+  onModelSelect, 
+  onAddModel, 
+  placedModels,
+  onObjectSelect,
+  selectedObject
+}) => {
   return (
     <div className="design-canvas">
       <ThreeCanvas
@@ -595,6 +615,8 @@ const Canvas = ({ selectedTemplate, modelScales, selectedModel, onModelSelect, o
           onModelSelect={onModelSelect}
           onAddModel={onAddModel}
           placedModels={placedModels}
+          onObjectSelect={onObjectSelect}
+          selectedObject={selectedObject}
         />
       </ThreeCanvas>
     </div>

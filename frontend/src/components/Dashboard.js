@@ -31,6 +31,9 @@ const Dashboard = () => {
   // Project management state
   const [showProjectManager, setShowProjectManager] = useState(false);
   const [currentProject, setCurrentProject] = useState(null);
+  
+  // Object selection and color management state
+  const [selectedObject, setSelectedObject] = useState(null);
 
   const refreshToken = useCallback(async () => {
     try {
@@ -249,9 +252,79 @@ const Dashboard = () => {
     setActiveProject('New Canvas');
     setPlacedModels([]);
     setSelectedModel(null);
+    setSelectedObject(null);
     setShowProjectManager(false);
     console.log('New project created');
   }, []);
+
+  // Object selection and color management handlers
+  const handleObjectSelect = useCallback((object) => {
+    setSelectedObject(object);
+    setActiveSection('object-properties');
+    console.log('Object selected:', object);
+  }, []);
+
+  const handleColorChange = useCallback((objectId, newColor) => {
+    setPlacedModels(prevModels => 
+      prevModels.map(model => 
+        model.id === objectId 
+          ? { ...model, color: newColor }
+          : model
+      )
+    );
+    
+    if (selectedObject?.id === objectId) {
+      setSelectedObject(prev => ({ ...prev, color: newColor }));
+    }
+    
+    console.log('Color changed for object:', objectId, 'to:', newColor);
+  }, [selectedObject]);
+
+  const handleAIColorSuggestion = useCallback((objectId, colorSuggestion) => {
+    handleColorChange(objectId, colorSuggestion.hex);
+    console.log('AI color applied:', colorSuggestion.name, 'to object:', objectId);
+  }, [handleColorChange]);
+
+  const handleColorReset = useCallback((objectId) => {
+    setPlacedModels(prevModels => 
+      prevModels.map(model => 
+        model.id === objectId 
+          ? { ...model, color: null } // Reset to null to use original material
+          : model
+      )
+    );
+    
+    if (selectedObject?.id === objectId) {
+      setSelectedObject(prev => ({ ...prev, color: null }));
+    }
+    
+    console.log('Color reset for object:', objectId);
+  }, [selectedObject]);
+
+  const handleObjectTransform = useCallback((objectId, transformType, value) => {
+    setPlacedModels(prevModels => 
+      prevModels.map(model => 
+        model.id === objectId 
+          ? { ...model, [transformType]: value }
+          : model
+      )
+    );
+    
+    if (selectedObject?.id === objectId) {
+      setSelectedObject(prev => ({ ...prev, [transformType]: value }));
+    }
+    
+    console.log('Object transformed:', objectId, transformType, value);
+  }, [selectedObject]);
+
+  const handleObjectDelete = useCallback((objectId) => {
+    handleRemoveModel(objectId);
+    if (selectedObject?.id === objectId) {
+      setSelectedObject(null);
+      setActiveSection(null);
+    }
+    console.log('Object deleted:', objectId);
+  }, [handleRemoveModel, selectedObject]);
 
   if (loading) {
     return <div className="dashboard-loading">Loading...</div>;
@@ -409,6 +482,8 @@ const Dashboard = () => {
           onModelSelect={handleModelSelect}
           onAddModel={handleAddModel}
           placedModels={placedModels}
+          onObjectSelect={handleObjectSelect}
+          selectedObject={selectedObject}
         />
 
         {/* Tutorial Overlay (if shown) */}
@@ -493,6 +568,12 @@ const Dashboard = () => {
         onTemplateSelect={handleTemplateSelect}
         placedModels={placedModels}
         onModelSelect={handleModelSelect}
+        selectedObject={selectedObject}
+        onColorChange={handleColorChange}
+        onAIColorSuggestion={handleAIColorSuggestion}
+        onColorReset={handleColorReset}
+        onObjectTransform={handleObjectTransform}
+        onObjectDelete={handleObjectDelete}
       />
 
       {/* Project Manager Modal */}

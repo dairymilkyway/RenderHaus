@@ -32,6 +32,9 @@ app.use('/api/projects', require('./routes/projects'));
 // Admin routes
 app.use('/api/admin/projects', require('./routes/admin/projects'));
 
+// AI Color Suggestions route
+app.use('/api/python', require('./routes/aiColorSuggestions'));
+
 // Python backend proxy route
 app.use('/api/python', async (req, res, next) => {
   try {

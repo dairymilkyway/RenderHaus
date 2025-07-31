@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 // import ViewSection from './Functions/ViewSection';
 import AISuggestSection from './Functions/AISuggestSection';
 import ExportSection from './Functions/ExportSection';
+import ObjectProperties from './Functions/ObjectProperties';
 // import AIExplainSection from './Functions/AIExplainSection';
 // import SaveExportSection from './Functions/SaveExportSection';
 import './css/Properties.css';
@@ -223,11 +224,32 @@ const InlineTemplatesSection = ({ onTemplateSelect }) => {
   );
 };
 
-const Properties = ({ activeSection, onTemplateSelect, placedModels, onModelSelect }) => {
+const Properties = ({ 
+  activeSection, 
+  onTemplateSelect, 
+  placedModels, 
+  onModelSelect,
+  selectedObject,
+  onColorChange,
+  onAIColorSuggestion,
+  onColorReset,
+  onObjectTransform,
+  onObjectDelete
+}) => {
   const renderSection = () => {
     switch (activeSection) {
       case 'templates':
         return <InlineTemplatesSection onTemplateSelect={onTemplateSelect} />;
+      case 'object-properties':
+        return (
+          <ObjectProperties
+            selectedObject={selectedObject}
+            onColorChange={onColorChange}
+            onAIColorSuggestion={onAIColorSuggestion}
+            onColorReset={onColorReset}
+            onObjectDelete={onObjectDelete}
+          />
+        );
       case 'components':
         return <div className="properties-panel"><h3>Components</h3><p>Component selection coming soon...</p></div>;
       case 'materials':

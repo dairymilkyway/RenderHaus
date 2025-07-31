@@ -1,6 +1,6 @@
 .dashboard-container {
   display: grid;
-  grid-template-columns: 80px 1fr 250px 300px;
+  grid-template-columns: 60px 1fr 200px 260px; /* MUCH smaller panels for MAXIMUM canvas space */
   grid-template-rows: 1fr;
   height: 100vh;
   background-color: #f8fafc;
@@ -10,7 +10,7 @@
 
 /* Responsive layout when placed models panel is minimized */
 .dashboard-container:has(.placed-models-panel.minimized) {
-  grid-template-columns: 80px 1fr 80px 300px;
+  grid-template-columns: 60px 1fr 60px 260px; /* MASSIVE canvas space when minimized! */
 }
 
 /* Main Content Area */
@@ -74,6 +74,8 @@
   flex: 1;
   overflow: hidden;
   position: relative;
+  padding: 0; /* Remove any padding */
+  margin: 0; /* Remove any margin */
 }
 
 .canvas-placeholder {

@@ -3,6 +3,7 @@ import {
   Squares2X2Icon,
   SparklesIcon,
   ShareIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 import './css/Sidebar.css';
 
@@ -20,6 +21,13 @@ const Sidebar = ({ activeSection, onSectionChange }) => {
         >
           <Squares2X2Icon className="tool-icon" />
           <span>Templates</span>
+        </button>
+        <button 
+          className={`tool-button ${activeSection === 'object-properties' ? 'active' : ''}`}
+          onClick={() => handleSectionClick('object-properties')}
+        >
+          <WrenchScrewdriverIcon className="tool-icon" />
+          <span>Object Properties</span>
         </button>
         <button 
           className={`tool-button ${activeSection === 'ai-suggestions' ? 'active' : ''}`}

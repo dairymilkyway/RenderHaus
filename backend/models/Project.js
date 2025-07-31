@@ -10,6 +10,10 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  preview: {
+    type: String, // Base64 encoded image data
+    default: null
+  },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

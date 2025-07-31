@@ -47,30 +47,9 @@ const AISuggestSection = ({ placedModels = [], onModelSelect }) => {
       if (furnitureResponse.ok) {
         const furnitureData = await furnitureResponse.json();
         console.log('fetchAISuggestions - Furniture data:', furnitureData);
-        setSuggestions(furnitureData.suggestions || []);
-      }
-
-      const colorResponse = await fetch('http://localhost:5000/api/python/ai/color-suggestions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          current_models: placedModels.map(model => ({
-            name: model.name,
-            category: model.category,
-            // Include full model data for 3D analysis
-            modelFile: model.modelFile,
-            fileUrl: model.modelFile?.fileUrl || model.fileUrl,
-            _id: model._id
-          })),
-          room_type: 'living_room'
-        })
-      });
-
-      if (colorResponse.ok) {
-        const colorData = await colorResponse.json();
-        setColorSuggestions(colorData.color_suggestions || []);
+        setSuggestions(furnitureData.suggestions?.furniture_suggestions || []);
+        // Get color suggestions from the same response
+        setColorSuggestions(furnitureData.suggestions?.color_suggestions || []);
       }
 
     } catch (err) {
@@ -177,13 +156,13 @@ const AISuggestSection = ({ placedModels = [], onModelSelect }) => {
                   }}
                 >
                   <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                    {suggestion.furniture_type}
+                    {suggestion.item || suggestion.furniture_type}
                   </div>
                   <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
                     {suggestion.reason}
                   </div>
                   <div style={{ fontSize: '12px', color: '#007bff' }}>
-                    Confidence: {Math.round(suggestion.confidence * 100)}%
+                    Category: {suggestion.category}
                   </div>
                 </div>
               ))}
@@ -216,7 +195,7 @@ const AISuggestSection = ({ placedModels = [], onModelSelect }) => {
                 }}>
                   <div 
                     style={{ 
-                      backgroundColor: colorSuggestion.hex_code,
+                      backgroundColor: colorSuggestion.color || colorSuggestion.hex_code,
                       width: '30px',
                       height: '30px',
                       borderRadius: '50%',
@@ -225,11 +204,11 @@ const AISuggestSection = ({ placedModels = [], onModelSelect }) => {
                       flexShrink: 0,
                       marginTop: '4px'
                     }}
-                    title={colorSuggestion.hex_code}
+                    title={colorSuggestion.color || colorSuggestion.hex_code}
                   ></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                      {colorSuggestion.color}
+                      {colorSuggestion.type ? `${colorSuggestion.type} Color` : (colorSuggestion.color || 'Color')}
                     </div>
                     <div style={{ 
                       fontSize: '14px', 
@@ -237,7 +216,7 @@ const AISuggestSection = ({ placedModels = [], onModelSelect }) => {
                       lineHeight: '1.5',
                       wordWrap: 'break-word'
                     }}>
-                      {colorSuggestion.reason}
+                      {colorSuggestion.description || colorSuggestion.reason}
                     </div>
                   </div>
                 </div>

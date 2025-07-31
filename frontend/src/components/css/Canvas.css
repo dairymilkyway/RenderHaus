@@ -1,10 +1,11 @@
 .design-canvas {
   flex: 1;
   background-color: #f5f5f5;
-  border-radius: 8px;
-  margin: 16px;
+  border-radius: 0; /* Remove border radius for maximum space */
+  margin: 0; /* NO margins - use every pixel! */
   position: relative;
-  height: calc(100vh - 100px); /* Adjust based on your topbar height */
+  height: 100vh; /* FULL viewport height! */
+  min-height: 1000px; /* Much higher minimum */
   overflow: hidden;
 }
 
@@ -12,6 +13,7 @@
   width: 100% !important;
   height: 100% !important;
   outline: none;
+  display: block; /* Remove any inline spacing */
 }
 
 .canvas-placeholder {
